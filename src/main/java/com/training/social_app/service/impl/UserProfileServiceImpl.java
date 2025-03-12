@@ -1,6 +1,6 @@
 package com.training.social_app.service.impl;
 
-import com.training.social_app.dto.request.UserProfileRequestDto;
+import com.training.social_app.dto.request.UserProfileRequest;
 import com.training.social_app.entity.UserProfile;
 import com.training.social_app.repository.UserProfileRepository;
 import com.training.social_app.service.UserProfileService;
@@ -32,7 +32,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User profile not found for user id: " + userId));
     }
 
-    public UserProfile saveOrUpdateUserProfile(UserProfileRequestDto userProfile) {
+    public UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile) {
         //validation for birthdate input
         if(!DateUtils.isValidDate(userProfile.getBirthDate())){
             throw new RuntimeException("Invalid birth date");
