@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
@@ -20,23 +21,28 @@ import java.util.UUID;
 @Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-//    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder; //bcrypt password encoder
+    @Autowired
+    private final BCryptPasswordEncoder bCryptPasswordEncoder; //bcrypt password encoder
 
     @Override
-    public User registerUser(UserRequest request) {
+    public String registerUser(UserRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("User with email " + request.getEmail() + " already exists");
         }
+        //Create username from email
+        String username = request.getEmail().split("@")[0];
+
         User user = new User();
+        user.setUsername(username);
         user.setEmail(request.getEmail());
         user.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
-        user.setOtp(generateOtp());
         user.setIsVerified(false);
-        return userRepository.save(user);
+        userRepository.save(user);
+
+        return "User registered successfully. Your username is " + username;
     }
 
     private String generateOtp() {
@@ -54,19 +60,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String verifyOtp(String email, String otp) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found for email: " + email));
-        if(user.getOtp() == null || user.getOtpExpiry() == null || LocalDateTime.now().isAfter(user.getOtpExpiry())) {
-            throw new RuntimeException("OTP has expired. Please generate a new OTP");
+    public String login(LoginRequest loginRequest){
+        User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow(() -> new RuntimeException("User not found for username: " + loginRequest.getUsername()));
+        if (!bCryptPasswordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        String otp = generateOtp();
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+        return "Your OTP is " + otp;
+    }
+
+    public boolean verifyOtp(User user, String otp) {
+        if (user.getOtp() == null || user.getOtpExpiry() == null || LocalDateTime.now().isAfter(user.getOtpExpiry())) {
+            throw new RuntimeException("OTP expired");
         }
         if (!user.getOtp().equals(otp)) {
             throw new RuntimeException("Invalid OTP");
         }
-        user.setIsVerified(true);
-        //Reset OTP
         user.setOtp(null);
         user.setOtpExpiry(null);
-        return "OTP verified successfully";
+        userRepository.save(user);
+        return true;
     }
 
     @Override
@@ -77,5 +94,20 @@ public class UserServiceImpl implements UserService {
         user.setForgotPasswordTokenExpiry(LocalDateTime.now().plusMinutes(30));
         userRepository.save(user);
         return token;
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByForgotPasswordToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+
+        if (LocalDateTime.now().isAfter(user.getForgotPasswordTokenExpiry())) {
+            throw new RuntimeException("Invalid or expired token");
+        }
+
+        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        user.setForgotPasswordToken(null);
+        user.setForgotPasswordTokenExpiry(null);
+        userRepository.save(user);
     }
 }

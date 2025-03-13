@@ -1,10 +1,15 @@
 package com.training.social_app.service.impl;
 
 import com.training.social_app.entity.Like;
+import com.training.social_app.entity.User;
 import com.training.social_app.repository.LikeRepository;
+import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.LikeService;
+import com.training.social_app.utils.UserContext;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,8 +21,13 @@ import java.util.Calendar;
 public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
 
+    @Autowired
+    private final UserRepository userRepository;
+
     private Integer getCurrentUserId() {
-        return 1;
+        User currentUser = userRepository.findById(UserContext.getUser().getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
+        return currentUser.getId();
     }
     @Override
     public Like likePost(Integer postId) {
