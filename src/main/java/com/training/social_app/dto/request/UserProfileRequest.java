@@ -5,10 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
-import java.time.LocalDate;
-
 @Data
-public class UserProfileRequestDto {
+public class UserProfileRequest {
     @NotBlank(message = "Full name is required")
     @NotNull(message = "Full name is required")
     private String fullName;

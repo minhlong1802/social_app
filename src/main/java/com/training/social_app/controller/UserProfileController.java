@@ -1,6 +1,6 @@
 package com.training.social_app.controller;
 
-import com.training.social_app.dto.request.UserProfileRequestDto;
+import com.training.social_app.dto.request.UserProfileRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.UserProfile;
 import com.training.social_app.service.UserProfileService;
@@ -48,7 +48,7 @@ public class UserProfileController {
 
     //Update user profile
     @PostMapping
-    public ResponseEntity<Object> updateUserProfile(@RequestBody @Valid UserProfileRequestDto userProfile, BindingResult bindingResult) {
+    public ResponseEntity<Object> updateUserProfile(@RequestBody @Valid UserProfileRequest userProfile, BindingResult bindingResult) {
         try {
             Map<String, String> errors = new HashMap<>();
             if (bindingResult.hasErrors()) {

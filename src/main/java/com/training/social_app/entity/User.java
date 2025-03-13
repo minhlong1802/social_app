@@ -18,8 +18,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name="email", nullable = false)
+    @Column(name="email", nullable = false, unique = true)
     private String email;
+
+    @Column(name="username", nullable = false, unique = true)
+    private String username;
 
     @Column(name="password", nullable = false)
     private String password;
@@ -30,6 +33,9 @@ public class User {
 
     @Column(name="otp")
     private String otp;
+
+    @Column(name="otp_expiry")
+    private LocalDateTime otpExpiry;
 
     @Column(name="is_verified")
     private Boolean isVerified = false;
@@ -46,8 +52,7 @@ public class User {
     @Column(name="updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserProfile userProfile;
-
 
 }
