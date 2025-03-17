@@ -71,6 +71,11 @@ public class UserProfileServiceImpl implements UserProfileService {
         profile.setLocation(userProfile.getLocation());
 
         if (file != null && !file.isEmpty()) {
+            // Validate file type
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Only image files are allowed");
+            }
             try {
                 String fileName = userId + "_" + file.getOriginalFilename();
                 Path filePath = Paths.get(uploadDir, fileName);
