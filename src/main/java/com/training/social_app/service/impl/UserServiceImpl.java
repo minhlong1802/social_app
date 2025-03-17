@@ -6,6 +6,7 @@ import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.UserService;
+import com.training.social_app.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +110,11 @@ public class UserServiceImpl implements UserService {
         user.setForgotPasswordToken(null);
         user.setForgotPasswordTokenExpiry(null);
         userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser() {
+        Integer userId = UserContext.getUser().getUser().getId();
+        userRepository.deleteById(userId);
     }
 }

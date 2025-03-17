@@ -1,5 +1,6 @@
 package com.training.social_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.training.social_app.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,6 +53,7 @@ public class User {
     @Column(name="updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @JsonBackReference
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserProfile userProfile;
 
