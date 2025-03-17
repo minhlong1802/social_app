@@ -8,9 +8,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,26 +49,25 @@ public class UserProfileController {
     }
 
     //Update user profile
-    @PostMapping
-    public ResponseEntity<Object> updateUserProfile(@RequestBody @Valid UserProfileRequest userProfile, BindingResult bindingResult) {
-        try {
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<?> saveOrUpdateUserProfile(@RequestPart("userProfile") @Valid UserProfileRequest userProfile,
+                                                     @RequestPart("file") MultipartFile file, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
-            if (bindingResult.hasErrors()) {
-                bindingResult.getFieldErrors().forEach(error ->
-                        errors.put(error.getField(), error.getDefaultMessage())
-                );
-            }
-            if (!errors.isEmpty()) {
-                return APIResponse.responseBuilder(
-                        errors,
-                        "Validation failed",
-                        HttpStatus.BAD_REQUEST
-                );
-            }
-            UserProfile updatedUserProfile = userProfileService.saveOrUpdateUserProfile(userProfile);
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage())
+            );
+            return APIResponse.responseBuilder(
+                    errors,
+                    "Validation failed",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        try {
+            UserProfile updatedUserProfile = userProfileService.saveOrUpdateUserProfile(userProfile, file);
             return APIResponse.responseBuilder(updatedUserProfile, "User profile updated successfully", HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("Error updateUserProfile", e);
+            log.error("Error saveOrUpdateUserProfile", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),

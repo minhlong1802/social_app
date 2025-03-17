@@ -10,10 +10,17 @@ import com.training.social_app.utils.DateUtils;
 import com.training.social_app.utils.UserContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -38,31 +45,46 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User profile not found for user id: " + userId));
     }
 
-    public UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile) {
-        //validation for birthdate input
-        if(!DateUtils.isValidDate(userProfile.getBirthDate())){
+    public UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile, MultipartFile file) {
+        // Validate birthdate input
+        if (!DateUtils.isValidDate(userProfile.getBirthDate())) {
             throw new RuntimeException("Invalid birth date");
         }
+
         Integer userId = getCurrentUserId();
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
         Optional<UserProfile> existingUserProfile = userProfileRepository.findByUserId(userId);
         UserProfile profile;
-        if(existingUserProfile.isPresent()){
+
+        // If user profile exists, update it, else create a new one
+        if (existingUserProfile.isPresent()) {
             profile = existingUserProfile.get();
-            profile.setFullName(userProfile.getFullName());
-            profile.setBirthDate(LocalDate.parse(userProfile.getBirthDate()));
-            profile.setOccupation(userProfile.getOccupation());
-            profile.setLocation(userProfile.getLocation());
-            profile.setAvatarUrl(userProfile.getAvatarUrl());
-        } else{
+        } else {
             profile = new UserProfile();
             profile.setUser(user);
-            profile.setFullName(userProfile.getFullName());
-            profile.setBirthDate(LocalDate.parse(userProfile.getBirthDate()));
-            profile.setOccupation(userProfile.getOccupation());
-            profile.setLocation(userProfile.getLocation());
-            profile.setAvatarUrl(userProfile.getAvatarUrl());
         }
+
+        profile.setFullName(userProfile.getFullName());
+        profile.setBirthDate(LocalDate.parse(userProfile.getBirthDate()));
+        profile.setOccupation(userProfile.getOccupation());
+        profile.setLocation(userProfile.getLocation());
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                String fileName = userId + "_" + file.getOriginalFilename();
+                Path filePath = Paths.get(uploadDir, fileName);
+                Files.createDirectories(filePath.getParent());
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                profile.setAvatarUrl(filePath.toString());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to store file", e);
+            }
+        }
+
         return userProfileRepository.save(profile);
     }
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 }

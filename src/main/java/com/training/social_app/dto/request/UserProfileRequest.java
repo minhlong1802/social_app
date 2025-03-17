@@ -16,5 +16,4 @@ public class UserProfileRequest {
     private String birthDate;
     private String occupation;
     private String location;
-    private String avatarUrl;
 }
