@@ -10,6 +10,6 @@ public interface PostService {
     Post updatePost(String content, MultipartFile file ,Integer postId);
     void deletePost(Integer postId);
     List<Post> getPostsByUserId();
-//    List<Post> getPostsOfFriendsSortedByDate(List<Integer> friendIds);
+    List<Post> getPostsOfFriendsSortedByDate();
     int countPostsForUserInPastWeek();
 }

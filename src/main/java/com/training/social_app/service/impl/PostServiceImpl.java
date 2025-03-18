@@ -2,6 +2,7 @@ package com.training.social_app.service.impl;
 
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
+import com.training.social_app.repository.FriendShipRepository;
 import com.training.social_app.repository.PostRepository;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.PostService;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -33,6 +35,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
+    private final FriendShipRepository friendShipRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -72,11 +77,16 @@ public class PostServiceImpl implements PostService {
         return postList;
     }
 
-//    //Cap nhat lai phan get friend id sau khi da co crud cua friendship
-//    @Override
-//    public List<Post> getPostsOfFriendsSortedByDate(List<Integer> friendIds) {
-//        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdDate"));
-//    }
+    @Override
+    public List<Post> getPostsOfFriendsSortedByDate() {
+        Integer userId = getCurrentUserId();
+        List<User> friends=friendShipRepository.findFriendsByUserId(userId);
+        List<Integer> friendIds = new ArrayList<>();
+        for(User friend:friends){
+            friendIds.add(friend.getId());
+        }
+        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdDate"));
+    }
 
     @Override
     public Post createPost(String content, MultipartFile file) {

@@ -21,28 +21,28 @@ import java.util.Objects;
 public class PostController {
     private final PostService postService;
 
-//    // Get posts of friends sorted by date
-//    @GetMapping
-//    public ResponseEntity<Object> getPostsOfFriendsSortedByDate() {
-//        try {
-//            List<Post> posts = postService.getPostsOfFriendsSortedByDate();
-//            return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
-//        } catch (RuntimeException e) {
-//            log.error("Error getPostsOfFriendsSortedByDate", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    Objects.requireNonNull(e.getMessage()),
-//                    HttpStatus.BAD_REQUEST
-//            );
-//        } catch (Exception e) {
-//            log.error("Error getPostsOfFriendsSortedByDate", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    "An unexpected error occurred",
-//                    HttpStatus.INTERNAL_SERVER_ERROR
-//            );
-//        }
-//    }
+    // Get posts of friends sorted by date
+    @GetMapping
+    public ResponseEntity<Object> getPostsOfFriendsSortedByDate() {
+        try {
+            List<Post> posts = postService.getPostsOfFriendsSortedByDate();
+            return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            log.error("Error getPostsOfFriendsSortedByDate", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Error getPostsOfFriendsSortedByDate", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
     // Get posts by user id
     @GetMapping("/user")
