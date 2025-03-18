@@ -32,6 +32,6 @@ public class FriendShip {
 
     @Column(name="status")
     @Enumerated(EnumType.STRING)
-    private RequestStatus requestStatus;
+    private RequestStatus status;
 
 }

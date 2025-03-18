@@ -207,12 +207,4 @@ public class AuthController {
             );
         }
     }
-//    @RequestMapping(value = "/api/auth/test", method = RequestMethod.GET)
-//    public ResponseEntity<?> test() {
-//        return APIResponse.responseBuilder(
-//                null,
-//                "Test",
-//                HttpStatus.OK
-//        );
-//    }
 }

@@ -69,13 +69,29 @@ public class LikeController {
         }
     }
 
-    //Count likes for a user in the past week
-    @GetMapping("/count")
-    public ResponseEntity<Object> countLikesForUserInPastWeek() {
-        return APIResponse.responseBuilder(
-                Collections.singletonMap("Last week's like count: ", likeService.countLikesForUserInPastWeek()),
-                "Likes counted successfully",
-                HttpStatus.OK
-        );
-    }
+//    //Count likes for a user in the past week
+//    @GetMapping("/count")
+//    public ResponseEntity<Object> countLikesForUserInPastWeek() {
+//        try{
+//            return APIResponse.responseBuilder(
+//                    Collections.singletonMap("Last week's like count: ", likeService.countLikesForUserInPastWeek()),
+//                    "Likes counted successfully",
+//                    HttpStatus.OK
+//            );
+//        } catch (RuntimeException e) {
+//            log.error("Error countLikesForUserInPastWeek", e);
+//            return APIResponse.responseBuilder(
+//                    null,
+//                    Objects.requireNonNull(e.getMessage()),
+//                    HttpStatus.BAD_REQUEST
+//            );
+//        } catch (Exception e) {
+//            log.error("Error countLikesForUserInPastWeek", e);
+//            return APIResponse.responseBuilder(
+//                    null,
+//                    "An unexpected error occurred",
+//                    HttpStatus.INTERNAL_SERVER_ERROR
+//            );
+//        }
+//    }
 }

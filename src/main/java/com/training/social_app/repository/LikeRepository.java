@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -16,5 +16,5 @@ public interface LikeRepository extends JpaRepository<Like, Integer> , JpaSpecif
 
     //Count likes for a given user's post between two dates
     @Query("SELECT COUNT(l) FROM Like l where l.post.user.id = :userId and l.createdAt between :startDate and :endDate")
-    int countLikesByUserAndDate(Integer userId, LocalDate startDate, LocalDate endDate);
+    int countLikesByUserAndDate(Integer userId, LocalDateTime startDate, LocalDateTime endDate);
 }
