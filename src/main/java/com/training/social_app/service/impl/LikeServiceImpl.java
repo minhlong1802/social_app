@@ -1,8 +1,10 @@
 package com.training.social_app.service.impl;
 
 import com.training.social_app.entity.Like;
+import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
 import com.training.social_app.repository.LikeRepository;
+import com.training.social_app.repository.PostRepository;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.LikeService;
 import com.training.social_app.utils.UserContext;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 @Service
@@ -24,6 +27,9 @@ public class LikeServiceImpl implements LikeService {
     @Autowired
     private final UserRepository userRepository;
 
+    @Autowired
+    private final PostRepository postRepository;
+
     private Integer getCurrentUserId() {
         User currentUser = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
@@ -34,14 +40,14 @@ public class LikeServiceImpl implements LikeService {
         Integer userId = getCurrentUserId();
         //Check if the user has already liked the post
         Like existingLike = likeRepository.findByUserIdAndPostId(userId, postId).orElseThrow(() -> new RuntimeException("User has already liked the post"));
-//        //Handle validation
-//        Post post = postRepository.findById(likeRequestDto.getPostId()).orElseThrow(() -> new RuntimeException("Post not found for id: " + likeRequestDto.getPostId()));
-//        User user = userRepository.findById(likeRequestDto.getUserId()).orElseThrow(() -> new RuntimeException("User not found for id: " + likeRequestDto.getUserId()));
+        //Handle validation
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found for id: " + postId));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
 
         //Create a new like
         Like like = new Like();
-//        like.setPost(post);
-//        like.setUser(user);
+        like.setPost(post);
+        like.setUser(user);
         return likeRepository.save(like);
     }
 
@@ -67,7 +73,8 @@ public class LikeServiceImpl implements LikeService {
         cal.set(Calendar.MILLISECOND, 0);
 
         LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDate endDate = LocalDate.now();
-        return likeRepository.countLikesByUserAndDate(userId, startDate, endDate);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = LocalDateTime.now();
+        return likeRepository.countLikesByUserAndDate(userId, startDateTime, endDateTime);
     }
 }

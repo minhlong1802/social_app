@@ -67,27 +67,27 @@ public class PostController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<Object> countPostsForUserInPastWeek() {
-        try {
-            int count = postService.countPostsForUserInPastWeek();
-            return APIResponse.responseBuilder(count, "Posts count retrieved successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
-            log.error("Error countPostsForUserInPastWeek", e);
-            return APIResponse.responseBuilder(
-                    null,
-                    Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
-            );
-        } catch (Exception e) {
-            log.error("Error countPostsForUserInPastWeek", e);
-            return APIResponse.responseBuilder(
-                    null,
-                    "An unexpected error occurred",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
+//    @GetMapping("/count")
+//    public ResponseEntity<Object> countPostsForUserInPastWeek() {
+//        try {
+//            int count = postService.countPostsForUserInPastWeek();
+//            return APIResponse.responseBuilder(count, "Posts count retrieved successfully", HttpStatus.OK);
+//        } catch (RuntimeException e) {
+//            log.error("Error countPostsForUserInPastWeek", e);
+//            return APIResponse.responseBuilder(
+//                    null,
+//                    Objects.requireNonNull(e.getMessage()),
+//                    HttpStatus.BAD_REQUEST
+//            );
+//        } catch (Exception e) {
+//            log.error("Error countPostsForUserInPastWeek occurred", e);
+//            return APIResponse.responseBuilder(
+//                    null,
+//                    "An unexpected error occurred",
+//                    HttpStatus.INTERNAL_SERVER_ERROR
+//            );
+//        }
+//    }
 
     // Create post
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })

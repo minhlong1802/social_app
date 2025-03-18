@@ -57,8 +57,9 @@ public class PostServiceImpl implements PostService {
         cal.set(Calendar.MILLISECOND, 0);
 
         LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDate endDate = LocalDate.now();
-        return postRepository.countByUserIdAndCreatedAtBetween(userId, startDate, endDate);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = LocalDateTime.now();
+        return postRepository.countByUserIdAndCreatedAtBetween(userId, startDateTime, endDateTime);
     }
 
     @Override
