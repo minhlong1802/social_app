@@ -12,4 +12,5 @@ public interface PostService {
     List<Post> getPostsByUserId();
     List<Post> getPostsOfFriendsSortedByDate();
     int countPostsForUserInPastWeek();
+    List<Post> findAll();
 }

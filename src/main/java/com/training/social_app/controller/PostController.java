@@ -3,6 +3,7 @@ package com.training.social_app.controller;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.Post;
 import com.training.social_app.service.PostService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.swing.text.html.parser.Entity;
 import java.util.List;
 import java.util.Objects;
 
@@ -153,6 +155,38 @@ public class PostController {
             );
         } catch (Exception e) {
             log.error("Error deletePost", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> findAll() {
+        try {
+            return APIResponse.responseBuilder(
+                    postService.findAll(),
+                    "Posts retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error findAll", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (RuntimeException e) {
+            log.error("Error findAll", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Error findAll", e);
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred",

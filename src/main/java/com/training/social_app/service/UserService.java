@@ -1,10 +1,12 @@
 package com.training.social_app.service;
 
+import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.entity.User;
 import jakarta.persistence.criteria.CriteriaBuilder;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -16,4 +18,6 @@ public interface UserService {
     String generateForgotPasswordToken(String email);
     void resetPassword(String token, String newPassword);
     void deleteUser();
+    void deleteUsers(DeleteRequest request);
+    List<User> findAll();
 }

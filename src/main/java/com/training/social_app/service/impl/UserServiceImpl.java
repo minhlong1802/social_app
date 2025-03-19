@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.entity.User;
@@ -7,6 +8,7 @@ import com.training.social_app.enums.Role;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.UserService;
 import com.training.social_app.utils.UserContext;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -40,7 +43,6 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
         user.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
-        user.setIsVerified(false);
         userRepository.save(user);
 
         return "User registered successfully. Your username is " + username;
@@ -114,7 +116,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser() {
-        Integer userId = UserContext.getUser().getUser().getId();
+        Integer userId =UserContext.getUser().getUser().getId() ;
         userRepository.deleteById(userId);
+    }
+
+    @Override
+    public void deleteUsers(DeleteRequest request) {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new RuntimeException("User is not authorized to delete users");
+        }
+
+        List<Integer> ids = request.getIds();
+        List<User> usersToDelete = userRepository.findAllById(ids);
+
+        List<Integer> existingIds = usersToDelete.stream()
+                .map(User::getId)
+                .toList();
+
+        List<Integer> notFoundIds = ids.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+
+        if (!notFoundIds.isEmpty()) {
+            throw new EntityNotFoundException("Users not found for ids: " + notFoundIds);
+        }
+
+        userRepository.deleteAll(usersToDelete);
+    }
+
+    @Override
+    public List<User> findAll() {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new RuntimeException("User is not authorized to delete users");
+        }
+        return userRepository.findAll();
     }
 }

@@ -2,6 +2,7 @@ package com.training.social_app.service.impl;
 
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
+import com.training.social_app.enums.Role;
 import com.training.social_app.repository.FriendShipRepository;
 import com.training.social_app.repository.PostRepository;
 import com.training.social_app.repository.UserRepository;
@@ -85,7 +86,7 @@ public class PostServiceImpl implements PostService {
         for(User friend:friends){
             friendIds.add(friend.getId());
         }
-        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdDate"));
+        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     @Override
@@ -154,5 +155,14 @@ public class PostServiceImpl implements PostService {
             throw new RuntimeException("You are not allowed to delete this post");
         }
         postRepository.delete(post);
+    }
+
+    @Override
+    public List<Post> findAll() {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new RuntimeException("User is not authorized to delete users");
+        }
+        return postRepository.findAll();
     }
 }
