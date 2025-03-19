@@ -35,6 +35,7 @@ public class LikeServiceImpl implements LikeService {
                 .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
         return currentUser.getId();
     }
+
     @Override
     public Like likePost(Integer postId) {
         Integer userId = getCurrentUserId();
