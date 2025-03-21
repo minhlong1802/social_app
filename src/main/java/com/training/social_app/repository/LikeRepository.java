@@ -22,4 +22,8 @@ public interface LikeRepository extends JpaRepository<Like, Integer> , JpaSpecif
     //Find all likes for a post
     @Query("SELECT l FROM Like l where l.post.id = :postId")
     List<Like> findLikesByPostId(Integer postId);
+
+    //Count likes for a post
+    @Query("SELECT COUNT(l) FROM Like l where l.post.id = :postId")
+    int countLikesByPostId(Integer postId);
 }

@@ -14,4 +14,8 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
     //count comments for a given user in the past week
     @Query("SELECT COUNT(c) FROM Comment c where c.user.id = :userId and c.createdAt between :startDate and :endDate")
     int countCommentsByUserIdAndCreatedAtBetween(Integer userId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate);
+
+    //count comments for a post
+    @Query("SELECT COUNT(c) FROM Comment c where c.post.id = :postId")
+    int countCommentsByPostId(Integer postId);
 }

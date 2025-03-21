@@ -1,12 +1,11 @@
 package com.training.social_app.service.impl;
 
 import com.training.social_app.dto.request.DeleteRequest;
+import com.training.social_app.dto.response.PostResponse;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
-import com.training.social_app.repository.FriendShipRepository;
-import com.training.social_app.repository.PostRepository;
-import com.training.social_app.repository.UserRepository;
+import com.training.social_app.repository.*;
 import com.training.social_app.service.PostService;
 import com.training.social_app.utils.UserContext;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +41,12 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private final FriendShipRepository friendShipRepository;
 
+    @Autowired
+    private final LikeRepository likeRepository;
+
+    @Autowired
+    private final CommentRepository commentRepository;
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 
@@ -48,6 +54,18 @@ public class PostServiceImpl implements PostService {
         User currentUser = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
         return currentUser.getId();
+    }
+
+    private PostResponse convertToDTO(Post post) {
+        PostResponse postDTO = new PostResponse();
+        postDTO.setId(post.getId());
+        postDTO.setContent(post.getContent());
+        postDTO.setImageUrl(post.getImageUrl());
+        postDTO.setUserId(post.getUser().getId());
+        postDTO.setEdited(true);
+        postDTO.setLikeCount(likeRepository.countLikesByPostId(post.getId()));
+        postDTO.setCommentCount(commentRepository.countCommentsByPostId(post.getId()));
+        return postDTO;
     }
 
     @Override
@@ -70,24 +88,22 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> getPostsByUserId() {
+    public List<PostResponse> getPostsByUserId() {
         Integer userId = getCurrentUserId();
-        List<Post> postList= postRepository.findAllByUserId(userId);
-        if(postList.isEmpty()){
+        List<Post> postList = postRepository.findAllByUserId(userId);
+        if (postList.isEmpty()) {
             throw new RuntimeException("No posts found for user: " + UserContext.getUser().getUsername());
         }
-        return postList;
+        return postList.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public List<Post> getPostsOfFriendsSortedByDate() {
+    public List<PostResponse> getPostsOfFriendsSortedByDate() {
         Integer userId = getCurrentUserId();
-        List<User> friends=friendShipRepository.findFriendsByUserId(userId);
-        List<Integer> friendIds = new ArrayList<>();
-        for(User friend:friends){
-            friendIds.add(friend.getId());
-        }
-        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<User> friends = friendShipRepository.findFriendsByUserId(userId);
+        List<Integer> friendIds = friends.stream().map(User::getId).collect(Collectors.toList());
+        List<Post> posts = postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return posts.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -170,12 +186,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findAll() {
-        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+    public List<PostResponse> findAll() {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
             throw new RuntimeException("User is not authorized to see all posts");
         }
-        return postRepository.findAll();
+        return postRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -204,8 +221,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post findById(Integer postId) {
-        return postRepository.findById(postId)
+    public PostResponse findById(Integer postId) {
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
+        return convertToDTO(post);
     }
 }
