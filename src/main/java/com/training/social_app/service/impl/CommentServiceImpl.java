@@ -58,7 +58,11 @@ public class CommentServiceImpl implements CommentService {
         if (!existingComment.getUser().getId().equals(userId)) {
             throw new RuntimeException("User is not authorized to update this comment");
         }
+        if(commentRequest.getPostId() != null){
+            throw new RuntimeException("Cannot update this field")        ;
+        }
         existingComment.setContent(commentRequest.getContent());
+        existingComment.setUpdatedAt(LocalDateTime.now());
         return commentRepository.save(existingComment);
     }
 
@@ -98,5 +102,10 @@ public class CommentServiceImpl implements CommentService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = LocalDateTime.now();
         return commentRepository.countCommentsByUserIdAndCreatedAtBetween(userId, startDateTime, endDateTime);
+    }
+
+    @Override
+    public Comment getCommentById(Integer commentId) {
+        return commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
     }
 }

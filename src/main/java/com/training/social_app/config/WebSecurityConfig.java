@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -50,17 +51,6 @@ public class WebSecurityConfig  {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("user")
-//                .password("password")
-//                .roles("USER")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user);
-//    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
@@ -72,6 +62,8 @@ public class WebSecurityConfig  {
                         .requestMatchers("/api/auth/forgot-password").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh
@@ -79,6 +71,11 @@ public class WebSecurityConfig  {
                 )
                 .sessionManagement(sm -> sm
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .headers(headers -> headers
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                        )
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         // Disable the security for the login endpoint

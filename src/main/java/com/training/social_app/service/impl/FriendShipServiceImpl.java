@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class FriendShipServiceImpl implements FriendShipService {
         return currentUser.getId();
     }
 
+    // Get friends of user
     @Override
     public List<User> getFriends() {
         Integer userId = getCurrentUserId();
@@ -61,6 +63,9 @@ public class FriendShipServiceImpl implements FriendShipService {
     @Override
     public void sendFriendRequest(Integer requesteeId) {
         Integer requesterId = getCurrentUserId();
+        if(friendShipRepository.findByUser1IdAndUser2Id(userRepository.findById(requesteeId).orElseThrow(() -> new RuntimeException("User not found for requestee id: " + requesteeId)).getId(), requesterId).isPresent()) {
+            throw new RuntimeException("Friend request already sent or accepted");
+        }
         FriendShip friendShip = new FriendShip();
         friendShip.setUser1(userRepository.findById(requesterId).orElseThrow(() -> new RuntimeException("User not found for requester id: " + requesterId)));
         friendShip.setUser2(userRepository.findById(requesteeId).orElseThrow(() -> new RuntimeException("User not found for requestee id: " + requesteeId)));
@@ -74,6 +79,9 @@ public class FriendShipServiceImpl implements FriendShipService {
         if (friendShipRepository.findById(requestId).isEmpty()) {
             throw new RuntimeException("Friend request not found for id: " + requestId);
         }
+        if(friendShipRepository.findById(requestId).get().getUser2().getId() != userId) {
+            throw new RuntimeException("Friend request not found for user id: " + userId);
+        }
         friendShipRepository.acceptFriendRequest(userId, requestId);
     }
 
@@ -83,12 +91,18 @@ public class FriendShipServiceImpl implements FriendShipService {
         if (friendShipRepository.findById(requestId).isEmpty()) {
             throw new RuntimeException("Friend request not found for id: " + requestId);
         }
+        if(!Objects.equals(friendShipRepository.findById(requestId).get().getUser2().getId(), userId)) {
+            throw new RuntimeException("Friend request not found for user id: " + userId);
+        }
         friendShipRepository.rejectFriendRequest(userId, requestId);
     }
 
     @Override
     public void unfriend(Integer friendId) {
         Integer userId = getCurrentUserId();
+        if(Objects.equals(userId, friendId)) {
+            throw new RuntimeException("User cannot unfriend themselves");
+        }
         FriendShip friendShip = friendShipRepository.findByUser1IdAndUser2Id(userId, friendId)
                 .orElseThrow(() -> new RuntimeException("Friendship not found for user id: " + userId + " and friend id: " + friendId));
         if(friendShip.getStatus() != RequestStatus.ACCEPTED) {

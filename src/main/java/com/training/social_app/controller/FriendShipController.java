@@ -4,15 +4,13 @@ import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
 import com.training.social_app.service.FriendShipService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +23,7 @@ public class FriendShipController {
     private final FriendShipService friendShipService;
 
     // Get friends of user
+    @Operation(summary = "Get friends of user")
     @GetMapping
     public ResponseEntity<Object> getFriendsOfUser() {
         try {
@@ -48,6 +47,7 @@ public class FriendShipController {
     }
 
     // Get friend requests of user
+    @Operation(summary = "Get friend requests of user")
     @GetMapping("/requests")
     public ResponseEntity<Object> getFriendRequestsOfUser() {
         try {
@@ -71,6 +71,7 @@ public class FriendShipController {
     }
 
     // Get friend requests to user
+    @Operation(summary = "Get friend requests to user")
     @GetMapping("/requests/to")
     public ResponseEntity<Object> getFriendRequestsToUser() {
         try {
@@ -94,12 +95,27 @@ public class FriendShipController {
     }
 
     //Get friendship by friend id
-    @GetMapping("/friendId")
-    public ResponseEntity<Object> getFriendshipByFriendId(@PathVariable Integer friendId) {
+    @Operation(summary = "Get friendship by friend id")
+    @GetMapping("/{friendId}")
+    public ResponseEntity<Object> getFriendshipByFriendId(@PathVariable String friendId) {
         try {
-            FriendShip friendShip = friendShipService.getFriendship(friendId);
+            int id = Integer.parseInt(friendId);
+            if(id<=0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Friend id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            FriendShip friendShip = friendShipService.getFriendship(id);
             return APIResponse.responseBuilder(friendShip, "Friendship retrieved successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        }catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid friendId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }  catch (RuntimeException e) {
             log.error("Error getFriendshipByFriendId", e);
             return APIResponse.responseBuilder(
                     null,
@@ -117,12 +133,26 @@ public class FriendShipController {
     }
 
     //Send friend request
-    @GetMapping("/sendRequest")
-    public ResponseEntity<Object> sendFriendRequest(@PathVariable Integer requesteeId) {
+    @Operation(summary = "Send friend request")
+    @PostMapping("/sendRequest/{requesteeId}")
+    public ResponseEntity<Object> sendFriendRequest(@PathVariable String requesteeId) {
         try {
-            friendShipService.sendFriendRequest(requesteeId);
+            int id = Integer.parseInt(requesteeId);
+            if(id<=0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Requestee id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );            }
+            friendShipService.sendFriendRequest(id);
             return APIResponse.responseBuilder(null, "Friend request sent successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        }catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid requesteeId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }  catch (RuntimeException e) {
             log.error("Error sendFriendRequest", e);
             return APIResponse.responseBuilder(
                     null,
@@ -140,11 +170,25 @@ public class FriendShipController {
     }
 
     //Accept friend request
-    @GetMapping("/acceptRequest")
-    public ResponseEntity<Object> acceptFriendRequest(@PathVariable Integer requestId) {
+    @Operation(summary = "Accept friend request")
+    @PutMapping("/acceptRequest/{requestId}")
+    public ResponseEntity<Object> acceptFriendRequest(@PathVariable String requestId) {
         try {
-            friendShipService.acceptFriendRequest(requestId);
+            int id = Integer.parseInt(requestId);
+            if(id<=0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Request id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );            }
+            friendShipService.acceptFriendRequest(id);
             return APIResponse.responseBuilder(null, "Friend request accepted successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid requestId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
         } catch (RuntimeException e) {
             log.error("Error acceptFriendRequest", e);
             return APIResponse.responseBuilder(
@@ -163,11 +207,26 @@ public class FriendShipController {
     }
 
     //Reject friend request
-    @GetMapping("/rejectRequest")
-    public ResponseEntity<Object> rejectFriendRequest(@PathVariable Integer requestId) {
+    @Operation(summary = "Reject friend request")
+    @PutMapping("/rejectRequest/{requestId}")
+    public ResponseEntity<Object> rejectFriendRequest(@PathVariable String requestId) {
         try {
-            friendShipService.rejectFriendRequest(requestId);
+            int id = Integer.parseInt(requestId);
+            if(id<=0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Request id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            friendShipService.rejectFriendRequest(id);
             return APIResponse.responseBuilder(null, "Friend request rejected successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid requestId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
         } catch (RuntimeException e) {
             log.error("Error rejectFriendRequest", e);
             return APIResponse.responseBuilder(
@@ -186,11 +245,25 @@ public class FriendShipController {
     }
 
     //Unfriend
-    @GetMapping("/unfriend")
-    public ResponseEntity<Object> unfriend(@PathVariable Integer friendId) {
+    @Operation(summary = "Unfriend")
+    @DeleteMapping("/unfriend/{friendId}")
+    public ResponseEntity<Object> unfriend(@PathVariable String friendId) {
         try {
-            friendShipService.unfriend(friendId);
+            int id = Integer.parseInt(friendId);
+            if(id<=0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Friend id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );            }
+            friendShipService.unfriend(id);
             return APIResponse.responseBuilder(null, "Unfriended successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid friendId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
         } catch (RuntimeException e) {
             log.error("Error unfriend", e);
             return APIResponse.responseBuilder(

@@ -46,8 +46,12 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     public UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile, MultipartFile file) {
+        if (userProfile == null) {
+            userProfile = new UserProfileRequest();
+        }
+
         // Validate birthdate input
-        if (!DateUtils.isValidDate(userProfile.getBirthDate())) {
+        if (userProfile.getBirthDate() != null && !DateUtils.isValidDate(userProfile.getBirthDate())) {
             throw new RuntimeException("Invalid birth date");
         }
 
@@ -66,7 +70,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         profile.setFullName(userProfile.getFullName());
-        profile.setBirthDate(LocalDate.parse(userProfile.getBirthDate()));
+        profile.setBirthDate(userProfile.getBirthDate() != null ? LocalDate.parse(userProfile.getBirthDate()) : null);
         profile.setOccupation(userProfile.getOccupation());
         profile.setLocation(userProfile.getLocation());
 
@@ -88,6 +92,11 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         return userProfileRepository.save(profile);
+    }
+
+    @Override
+    public UserProfile getUserProfileByProfileId(Integer profileId) {
+        return userProfileRepository.findById(profileId).orElseThrow(() -> new EntityNotFoundException("User profile not found for id: " + profileId));
     }
 
     @Value("${file.upload-dir}")

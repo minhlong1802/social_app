@@ -11,4 +11,5 @@ public interface CommentService {
     void deleteComment(Integer postId);
     List<Comment> getCommentsByPostId(Integer postId);
     int countCommentsForUserInPastWeek();
+    Comment getCommentById(Integer commentId);
 }

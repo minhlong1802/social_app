@@ -1,5 +1,6 @@
 package com.training.social_app.service;
 
+import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.entity.Post;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,4 +14,6 @@ public interface PostService {
     List<Post> getPostsOfFriendsSortedByDate();
     int countPostsForUserInPastWeek();
     List<Post> findAll();
+    void deletePosts(DeleteRequest deleteRequest);
+    Post findById(Integer postId);
 }

@@ -1,8 +1,10 @@
 package com.training.social_app.controller;
 
+import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.Post;
 import com.training.social_app.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.swing.text.html.parser.Entity;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,6 +25,7 @@ public class PostController {
     private final PostService postService;
 
     // Get posts of friends sorted by date
+    @Operation(summary = "Get posts of friends sorted by date")
     @GetMapping
     public ResponseEntity<Object> getPostsOfFriendsSortedByDate() {
         try {
@@ -47,6 +49,7 @@ public class PostController {
     }
 
     // Get posts by user id
+    @Operation(summary = "Get posts by user id")
     @GetMapping("/user")
     public ResponseEntity<Object> getPostsByUserId() {
         try {
@@ -92,9 +95,10 @@ public class PostController {
 //    }
 
     // Create post
+    @Operation(summary = "Create post")
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<Object> createPost(@RequestPart(required = false) String content,
-                                             @RequestPart(name = "file", required = false) MultipartFile file) {
+                                             @RequestPart(name = "imageUrl", required = false) MultipartFile file) {
         try {
             Post post = postService.createPost(content,file);
             return APIResponse.responseBuilder(post, "Post created successfully", HttpStatus.OK);
@@ -116,14 +120,29 @@ public class PostController {
     }
 
     // Update post
+    @Operation(summary = "Update post")
     @PutMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<Object> updatePost(@RequestPart(required = false) String content,
-                                             @RequestPart(name = "file", required = false) MultipartFile file,
-                                             @RequestPart Integer postId) {
+                                             @RequestPart(name = "imageUrl", required = false) MultipartFile file,
+                                             @RequestPart String postId) {
         try {
-            Post post = postService.updatePost(content, file, postId);
+            int id = Integer.parseInt(postId);
+            if(id <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Post id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            Post post = postService.updatePost(content, file, id);
             return APIResponse.responseBuilder(post, "Post updated successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }catch (RuntimeException e) {
             log.error("Error updatePost", e);
             return APIResponse.responseBuilder(
                     null,
@@ -141,11 +160,32 @@ public class PostController {
     }
 
     // Delete post
+    @Operation(summary = "Delete post")
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Object> deletePost(@PathVariable Integer postId) {
+    public ResponseEntity<Object> deletePost(@PathVariable String postId) {
         try {
-            postService.deletePost(postId);
+            int id = Integer.parseInt(postId);
+            if(id <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Post id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );            }
+            postService.deletePost(id);
             return APIResponse.responseBuilder(null, "Post deleted successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error deletePost", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
         } catch (RuntimeException e) {
             log.error("Error deletePost", e);
             return APIResponse.responseBuilder(
@@ -163,6 +203,8 @@ public class PostController {
         }
     }
 
+    // Find all posts
+    @Operation(summary = "Find all posts (admin)")
     @GetMapping("/all")
     public ResponseEntity<?> findAll() {
         try {
@@ -195,4 +237,76 @@ public class PostController {
         }
     }
 
+    // Delete posts
+    @Operation(summary = "Delete posts (admin)")
+    @DeleteMapping("/delete-posts")
+    public ResponseEntity<?> deletePosts(@RequestBody DeleteRequest request) {
+        try {
+            postService.deletePosts(request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Posts deleted successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error deletePosts", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (RuntimeException e) {
+            log.error("Error deletePosts", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Error deletePosts", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    //Get post by Id
+    @Operation(summary = "Get post by Id")
+    @GetMapping("/{postId}")
+    public ResponseEntity<Object> getPostById(@PathVariable String postId) {
+        try {
+            int id = Integer.parseInt(postId);
+            if(id <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Post id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            Post post = postService.findById(id);
+            return APIResponse.responseBuilder(post, "Post retrieved successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error getPostById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Error getPostById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

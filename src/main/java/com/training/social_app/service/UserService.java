@@ -3,6 +3,7 @@ package com.training.social_app.service;
 import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
+import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
 import jakarta.persistence.criteria.CriteriaBuilder;
 
@@ -19,5 +20,6 @@ public interface UserService {
     void resetPassword(String token, String newPassword);
     void deleteUser();
     void deleteUsers(DeleteRequest request);
-    List<User> findAll();
+    List<UserResponse> findAll();
+    List<UserResponse> findUsersByName(String name);
 }

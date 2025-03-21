@@ -10,8 +10,6 @@ public class CommentRequest {
     @NotNull(message = "content is required")
     @NotBlank(message = "content is required")
     private String content;
-    @NotNull(message = "postId is required")
-    @NotBlank(message = "postId is required")
     @Positive(message = "postId must be positive number")
     private Integer postId;
 }

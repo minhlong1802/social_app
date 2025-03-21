@@ -3,6 +3,7 @@ package com.training.social_app.controller;
 import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
+    @Operation(summary = "Delete current account")
     @DeleteMapping("/delete-account")
     public ResponseEntity<?> deleteUser() {
         try {
@@ -36,6 +38,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Delete users")
     @DeleteMapping
     public ResponseEntity<?> deleteUsers(@RequestBody DeleteRequest request) {
         try {
@@ -72,6 +75,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Find all users")
     @GetMapping
     public ResponseEntity<?> findAll() {
         try {
@@ -89,6 +93,25 @@ public class UserController {
             );
         } catch (Exception e) {
             log.error("Error findAll", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Operation(summary = "Find users by name")
+    @GetMapping("/find-by-name/{name}")
+    public ResponseEntity<?> findUsersByName(@PathVariable String name) {
+        try {
+            return APIResponse.responseBuilder(
+                    userService.findUsersByName(name),
+                    "Users retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (Exception e) {
+            log.error("Error findUsersByName", e);
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred",

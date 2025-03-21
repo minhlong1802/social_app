@@ -1,6 +1,7 @@
 package com.training.social_app.controller;
 
 import com.training.social_app.service.ReportService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -16,6 +17,7 @@ public class ReportController {
     private final ReportService reportService;
 
     //Generate a weekly report to file excel
+    @Operation(summary = "Generate a weekly report to file excel")
     @GetMapping(value = "/export", produces= MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> generateWeeklyReport() {
         try {

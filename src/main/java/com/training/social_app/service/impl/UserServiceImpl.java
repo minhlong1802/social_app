@@ -3,6 +3,7 @@ package com.training.social_app.service.impl;
 import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
+import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
 import com.training.social_app.repository.UserRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -45,7 +47,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(Role.USER);
         userRepository.save(user);
 
-        return "User registered successfully. Your username is " + username;
+        return "User registered successfully. Your username is " + username + ". Please use your username to later login";
     }
 
     private String generateOtp() {
@@ -78,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
     public boolean verifyOtp(User user, String otp) {
         if (user.getOtp() == null || user.getOtpExpiry() == null || LocalDateTime.now().isAfter(user.getOtpExpiry())) {
-            throw new RuntimeException("OTP expired");
+            throw new RuntimeException("Verified failed. OTP is invalid or expired");
         }
         if (!user.getOtp().equals(otp)) {
             throw new RuntimeException("Invalid OTP");
@@ -107,7 +109,9 @@ public class UserServiceImpl implements UserService {
         if (LocalDateTime.now().isAfter(user.getForgotPasswordTokenExpiry())) {
             throw new RuntimeException("Invalid or expired token");
         }
-
+        if(newPassword.length()<6){
+            throw new RuntimeException("Password must be at least 6 characters long");
+        }
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         user.setForgotPasswordToken(null);
         user.setForgotPasswordTokenExpiry(null);
@@ -146,11 +150,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findAll() {
-        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+    public List<UserResponse> findAll() {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("User is not authorized to delete users");
+            throw new RuntimeException("User is not authorized to see all users");
         }
-        return userRepository.findAll();
+        return userRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private UserResponse convertToDTO(User user) {
+        UserResponse userDTO = new UserResponse();
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setEmail(user.getEmail());
+        return userDTO;
+    }
+
+    @Override
+    public List<UserResponse> findUsersByName(String name) {
+        return userRepository.findAllByUsernameContaining(name).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 }

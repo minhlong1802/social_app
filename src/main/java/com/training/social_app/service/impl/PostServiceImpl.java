@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
@@ -96,7 +97,13 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
         Post newPost = new Post();
         newPost.setUser(user);
+
+        if ((content == null || content.isEmpty()) && (file == null || file.isEmpty())) {
+            throw new RuntimeException("Post cannot be empty");
+        }
+
         newPost.setContent(content);
+
         if (file != null && !file.isEmpty()) {
             // Validate file type
             String contentType = file.getContentType();
@@ -113,6 +120,7 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
+
         return postRepository.save(newPost);
     }
 
@@ -123,6 +131,9 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
         if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("You are not allowed to update this post");
+        }
+        if ((content == null || content.isEmpty()) && (file == null || file.isEmpty())) {
+            throw new RuntimeException("Post cannot be empty");
         }
         post.setContent(content);
         if (file != null && !file.isEmpty()) {
@@ -141,6 +152,7 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
+        post.setIsEdited(true);
         post.setUpdatedAt(LocalDateTime.now());
         return postRepository.save(post);
     }
@@ -161,8 +173,39 @@ public class PostServiceImpl implements PostService {
     public List<Post> findAll() {
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("User is not authorized to delete users");
+            throw new RuntimeException("User is not authorized to see all posts");
         }
         return postRepository.findAll();
+    }
+
+    @Override
+    public void deletePosts(DeleteRequest request){
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new RuntimeException("User is not authorized to delete posts");
+        }
+
+        List<Integer> ids = request.getIds();
+        List<Post> postsToDelete = postRepository.findAllById(ids);
+
+        List<Integer> existingIds = postsToDelete.stream()
+                .map(Post::getId)
+                .toList();
+
+        List<Integer> notFoundIds = ids.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+
+        if (!notFoundIds.isEmpty()) {
+            throw new EntityNotFoundException("Posts not found for ids: " + notFoundIds);
+        }
+
+        postRepository.deleteAll(postsToDelete);
+    }
+
+    @Override
+    public Post findById(Integer postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
     }
 }

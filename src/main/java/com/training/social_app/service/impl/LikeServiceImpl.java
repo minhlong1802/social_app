@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,25 +42,22 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public Like likePost(Integer postId) {
         Integer userId = getCurrentUserId();
-        //Check if the user has already liked the post
-        Like existingLike = likeRepository.findByUserIdAndPostId(userId, postId).orElseThrow(() -> new RuntimeException("User has already liked the post"));
-        //Handle validation
+        // Handle validation
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found for id: " + postId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
 
-        //Create a new like
+        // Check if the like already exists
+        Optional<Like> existingLike = likeRepository.findByUserIdAndPostId(userId, postId);
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+            return existingLike.get();
+        }
+
+        // Create a new like
         Like like = new Like();
         like.setPost(post);
         like.setUser(user);
         return likeRepository.save(like);
-    }
-
-    @Override
-    public void unlikePost(Integer postId) {
-        Integer userId = getCurrentUserId();
-        //Check if the user has already liked the post
-        Like existingLike = likeRepository.findByUserIdAndPostId(userId, postId).orElseThrow(() -> new RuntimeException("User has not liked the post"));
-        likeRepository.delete(existingLike);
     }
 
     @Override
@@ -77,5 +77,15 @@ public class LikeServiceImpl implements LikeService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = LocalDateTime.now();
         return likeRepository.countLikesByUserAndDate(userId, startDateTime, endDateTime);
+    }
+
+    @Override
+    public List<Like> getLikesForPost(Integer postId) {
+        return likeRepository.findLikesByPostId(postId);
+    }
+
+    @Override
+    public Like getLikeById(Integer likeId) {
+        return likeRepository.findById(likeId).orElseThrow(() -> new EntityNotFoundException("Like not found for id: " + likeId));
     }
 }

@@ -3,8 +3,10 @@ package com.training.social_app.repository;
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,10 +30,14 @@ public interface FriendShipRepository extends JpaRepository<FriendShip, Integer>
     List<User> findFriendRequestsToUserId(Integer userId);
 
     //Accept a friend request to current user by id and status
-    @Query("UPDATE FriendShip f SET f.status = 'ACCEPTED' where f.user2.id = :userId and f.id = :requestId and f.status = 'PENDING'")
+    @Modifying
+    @Transactional
+    @Query("UPDATE FriendShip f SET f.status = 'ACCEPTED' WHERE f.user2.id = :userId AND f.id = :requestId AND f.status = 'PENDING'")
     void acceptFriendRequest(Integer userId, Integer requestId);
 
     //Reject a friend request to current user by id and status
+    @Modifying
+    @Transactional
     @Query("UPDATE FriendShip f SET f.status = 'REJECTED' where f.user2.id = :userId and f.id = :requestId and f.status = 'PENDING'")
     void rejectFriendRequest(Integer userId, Integer requestId);
 
