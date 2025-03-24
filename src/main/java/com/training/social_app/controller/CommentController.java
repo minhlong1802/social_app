@@ -155,8 +155,8 @@ public class CommentController {
 
     // Get comments by post id
     @Operation(summary = "Get comments by post id")
-    @GetMapping("/post/{postId}")
-    public ResponseEntity<Object> getCommentsByPostId(@PathVariable String postId) {
+    @GetMapping("/post")
+    public ResponseEntity<Object> getCommentsByPostId(@RequestParam String postId, @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
             int id = Integer.parseInt(postId);
             if(id <= 0) {
@@ -167,7 +167,7 @@ public class CommentController {
                 );
             }
             return APIResponse.responseBuilder(
-                    commentService.getCommentsByPostId(id),
+                    commentService.getCommentsByPostId(id, pageNo, pageSize),
                     "Comments retrieved successfully",
                     HttpStatus.OK
             );

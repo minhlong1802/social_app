@@ -28,9 +28,10 @@ public class PostController {
     // Get posts of friends sorted by date
     @Operation(summary = "Get posts of friends sorted by date")
     @GetMapping
-    public ResponseEntity<Object> getPostsOfFriendsSortedByDate() {
+    public ResponseEntity<Object> getPostsOfFriendsSortedByDate(@RequestParam(defaultValue = "1") Integer pageNo,
+                                                                @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<PostResponse> posts = postService.getPostsOfFriendsSortedByDate();
+            List<PostResponse> posts = postService.getPostsOfFriendsSortedByDate(pageNo, pageSize);
             return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("Error getPostsOfFriendsSortedByDate", e);
@@ -207,10 +208,11 @@ public class PostController {
     // Find all posts
     @Operation(summary = "Find all posts (admin)")
     @GetMapping("/all")
-    public ResponseEntity<?> findAll() {
+    public ResponseEntity<?> findAll(@RequestParam(defaultValue = "1") Integer pageNo,
+                                     @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
             return APIResponse.responseBuilder(
-                    postService.findAll(),
+                    postService.findAll(pageNo, pageSize),
                     "Posts retrieved successfully",
                     HttpStatus.OK
             );

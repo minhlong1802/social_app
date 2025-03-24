@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +27,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,6 +67,8 @@ public class PostServiceImpl implements PostService {
         postDTO.setEdited(true);
         postDTO.setLikeCount(likeRepository.countLikesByPostId(post.getId()));
         postDTO.setCommentCount(commentRepository.countCommentsByPostId(post.getId()));
+        postDTO.setCreatedAt(post.getCreatedAt());
+        postDTO.setUpdatedAt(post.getUpdatedAt());
         return postDTO;
     }
 
@@ -98,12 +102,18 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> getPostsOfFriendsSortedByDate() {
+    public List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
         List<User> friends = friendShipRepository.findFriendsByUserId(userId);
         List<Integer> friendIds = friends.stream().map(User::getId).collect(Collectors.toList());
-        List<Post> posts = postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return posts.stream().map(this::convertToDTO).collect(Collectors.toList());
+
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> pagePosts = postRepository.findByUserIdIn(friendIds, pageable);
+
+        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -186,13 +196,18 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> findAll() {
+    public List<PostResponse> findAll(Integer page, Integer size) {
         User user = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
             throw new RuntimeException("User is not authorized to see all posts");
         }
-        return postRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> pagePosts = postRepository.findAll(pageable);
+        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override

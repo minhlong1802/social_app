@@ -12,13 +12,15 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -80,8 +82,22 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public List<Like> getLikesForPost(Integer postId) {
-        return likeRepository.findLikesByPostId(postId);
+    public List<Like> getLikesForPost(Integer postId, Integer page, Integer size) {
+        Optional<Post> post = postRepository.findById(postId);
+        if(post.isEmpty()) {
+            throw new EntityNotFoundException("Post not found for id: " + postId);
+        }
+        try {
+            if (page > 0) {
+                page = page - 1;
+            }
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Like> pageLikes = likeRepository.findByPostId(postId, pageable);
+            return pageLikes.getContent();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

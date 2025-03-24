@@ -1,6 +1,8 @@
 package com.training.social_app.repository;
 
 import com.training.social_app.entity.Like;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +28,6 @@ public interface LikeRepository extends JpaRepository<Like, Integer> , JpaSpecif
     //Count likes for a post
     @Query("SELECT COUNT(l) FROM Like l where l.post.id = :postId")
     int countLikesByPostId(Integer postId);
+
+    Page<Like> findByPostId(Integer postId, Pageable pageable);
 }

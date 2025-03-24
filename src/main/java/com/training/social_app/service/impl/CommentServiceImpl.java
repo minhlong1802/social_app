@@ -12,6 +12,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -78,11 +81,16 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<Comment> getCommentsByPostId(Integer postId) {
-        if(postRepository.findById(postId).isEmpty()){
+    public List<Comment> getCommentsByPostId(Integer postId, Integer page, Integer size) {
+        if (postRepository.findById(postId).isEmpty()) {
             throw new EntityNotFoundException("Post not found for id: " + postId);
         }
-        return commentRepository.findAllByPostId(postId);
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Comment> pageComments = commentRepository.findAllByPostId(postId, pageable);
+        return pageComments.getContent();
     }
 
     @Override

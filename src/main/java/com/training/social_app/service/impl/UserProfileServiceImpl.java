@@ -99,6 +99,12 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.findById(profileId).orElseThrow(() -> new EntityNotFoundException("User profile not found for id: " + profileId));
     }
 
+    @Override
+    public void deleteUserProfile() {
+        Integer userId = getCurrentUserId();
+        userProfileRepository.deleteByUserId(userId);
+    }
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 }

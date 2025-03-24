@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface UserProfileRepository extends JpaRepository<UserProfile, Integer> {
     //Find a user profile by user id
     Optional<UserProfile> findByUserId(Integer userId);
+
+    void deleteByUserId(Integer userId);
 }

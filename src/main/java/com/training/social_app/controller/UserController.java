@@ -77,19 +77,14 @@ public class UserController {
 
     @Operation(summary = "Find all users")
     @GetMapping
-    public ResponseEntity<?> findAll() {
+    public ResponseEntity<?> findAll(@RequestParam(defaultValue = "") String searchText,
+                                     @RequestParam(defaultValue = "1") Integer pageNo,
+                                     @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
             return APIResponse.responseBuilder(
-                    userService.findAll(),
+                    userService.findAll(searchText, pageNo, pageSize),
                     "Users retrieved successfully",
                     HttpStatus.OK
-            );
-        } catch (RuntimeException e) {
-            log.error("Error findAll", e);
-            return APIResponse.responseBuilder(
-                    null,
-                    e.getMessage(),
-                    HttpStatus.UNAUTHORIZED
             );
         } catch (Exception e) {
             log.error("Error findAll", e);
@@ -101,17 +96,24 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Find users by name")
-    @GetMapping("/find-by-name/{name}")
-    public ResponseEntity<?> findUsersByName(@PathVariable String name) {
+    @Operation(summary = "Find user by id")
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> findById(@PathVariable Integer userId) {
         try {
             return APIResponse.responseBuilder(
-                    userService.findUsersByName(name),
-                    "Users retrieved successfully",
+                    userService.findById(userId),
+                    "User retrieved successfully",
                     HttpStatus.OK
             );
+        } catch (EntityNotFoundException e) {
+            log.error("Error findById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
         } catch (Exception e) {
-            log.error("Error findUsersByName", e);
+            log.error("Error findById", e);
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred",

@@ -4,6 +4,7 @@ import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.Like;
 import com.training.social_app.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +61,8 @@ public class LikeController {
 
     //Get all likes for a post
     @Operation(summary = "Get all likes for a post")
-    @GetMapping("/post/{postId}")
-    public ResponseEntity<Object> getLikesForPost(@PathVariable String postId) {
+    @GetMapping("/post")
+    public ResponseEntity<Object> getLikesForPost(@RequestParam String postId, @RequestParam(defaultValue = "1") Integer pageNo,  @RequestParam(defaultValue = "10") Integer pageSize) {
         try{
             int id = Integer.parseInt(postId);
             if(id <= 0) {
@@ -72,7 +73,7 @@ public class LikeController {
                 );
             }
             return APIResponse.responseBuilder(
-                    likeService.getLikesForPost(id),
+                    likeService.getLikesForPost(id, pageNo, pageSize),
                     "Likes retrieved successfully",
                     HttpStatus.OK
             );

@@ -8,4 +8,5 @@ public interface UserProfileService {
     UserProfile getUserProfileByUserId();
     UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile,MultipartFile file);
     UserProfile getUserProfileByProfileId(Integer profileId);
+    void deleteUserProfile();
 }

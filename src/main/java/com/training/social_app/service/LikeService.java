@@ -10,7 +10,7 @@ public interface LikeService {
     int countLikesForUserInPastWeek();
 
     //Get all likes for a post
-    List<Like> getLikesForPost(Integer postId);
+    List<Like> getLikesForPost(Integer postId, Integer page, Integer size);
 
     //Get like by id
     Like getLikeById(Integer likeId);

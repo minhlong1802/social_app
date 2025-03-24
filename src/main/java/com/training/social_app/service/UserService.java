@@ -20,6 +20,6 @@ public interface UserService {
     void resetPassword(String token, String newPassword);
     void deleteUser();
     void deleteUsers(DeleteRequest request);
-    List<UserResponse> findAll();
-    List<UserResponse> findUsersByName(String name);
+    List<UserResponse> findAll(String searchText, int page, int size);
+    UserResponse findById(Integer userId);
 }

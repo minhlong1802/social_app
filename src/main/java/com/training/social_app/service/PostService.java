@@ -12,9 +12,9 @@ public interface PostService {
     Post updatePost(String content, MultipartFile file ,Integer postId);
     void deletePost(Integer postId);
     List<PostResponse> getPostsByUserId();
-    List<PostResponse> getPostsOfFriendsSortedByDate();
+    List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size);
     int countPostsForUserInPastWeek();
-    List<PostResponse> findAll();
+    List<PostResponse> findAll(Integer page, Integer size);
     void deletePosts(DeleteRequest deleteRequest);
     PostResponse findById(Integer postId);
 }

@@ -125,4 +125,21 @@ public class UserProfileController {
             );
         }
     }
+
+    //Delete user profile
+    @Operation(summary = "Delete user profile")
+    @DeleteMapping
+    public ResponseEntity<Object> deleteUserProfile() {
+        try {
+            userProfileService.deleteUserProfile();
+            return APIResponse.responseBuilder(null, "User profile deleted successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error deleteUserProfile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
