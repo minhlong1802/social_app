@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface UserService {
     String login(LoginRequest request);
-    String registerUser(UserRequest request);
+    User registerUser(UserRequest request);
     User findByUsername(String username);
     boolean verifyOtp(User user, String otp);
     String generateForgotPasswordToken(String email);

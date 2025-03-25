@@ -8,10 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface PostService {
-    Post createPost(String content, MultipartFile file);
-    Post updatePost(String content, MultipartFile file ,Integer postId);
+    PostResponse createPost(String content, MultipartFile file);
+    PostResponse updatePost(String content, MultipartFile file ,Integer postId);
     void deletePost(Integer postId);
-    List<PostResponse> getPostsByUserId();
+    List<PostResponse> getPostsByUserId(Integer page, Integer size);
     List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size);
     List<PostResponse> findAll(Integer page, Integer size);
     void deletePosts(DeleteRequest deleteRequest);

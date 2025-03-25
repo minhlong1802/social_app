@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder; //bcrypt password encoder
 
     @Override
-    public String registerUser(UserRequest request) {
+    public User registerUser(UserRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("User with email " + request.getEmail() + " already exists");
         }
@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(Role.USER);
         userRepository.save(user);
 
-        return "User registered successfully. Your username is " + username + ". Please use your username to later login";
+        return user;
     }
 
     private String generateOtp() {

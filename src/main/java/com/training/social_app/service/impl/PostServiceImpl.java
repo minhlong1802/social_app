@@ -72,13 +72,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> getPostsByUserId() {
+    public List<PostResponse> getPostsByUserId(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
-        List<Post> postList = postRepository.findAllByUserId(userId);
-        if (postList.isEmpty()) {
-            throw new RuntimeException("No posts found for user: " + UserContext.getUser().getUsername());
+        if (page > 0) {
+            page = page - 1;
         }
-        return postList.stream().map(this::convertToDTO).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postPage = postRepository.findAllByUserId(userId, pageable);
+        return postPage.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -97,7 +98,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post createPost(String content, MultipartFile file) {
+    public PostResponse createPost(String content, MultipartFile file) {
         Integer userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
@@ -126,11 +127,11 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
-        return postRepository.save(newPost);
+        return convertToDTO(postRepository.save(newPost));
     }
 
     @Override
-    public Post updatePost(String content, MultipartFile file ,Integer postId) {
+    public PostResponse updatePost(String content, MultipartFile file ,Integer postId) {
         Integer userId = getCurrentUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
@@ -159,7 +160,8 @@ public class PostServiceImpl implements PostService {
         }
         post.setIsEdited(true);
         post.setUpdatedAt(LocalDateTime.now());
-        return postRepository.save(post);
+
+        return convertToDTO(postRepository.save(post));
     }
 
 

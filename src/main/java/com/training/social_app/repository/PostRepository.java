@@ -13,7 +13,7 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer>, JpaSpecificationExecutor<Post> {
-    List<Post> findAllByUserId(Integer userId);
+    Page<Post> findAllByUserId(Integer userId, Pageable pageable);
     @Query("SELECT COUNT(p) FROM Post p where p.user.id = :userId and p.createdAt between :startDate and :endDate")
     int countByUserIdAndCreatedAtBetween(Integer userId, LocalDateTime startDate, LocalDateTime endDate);
     Page<Post> findByUserIdIn(List<Integer> userIds, Pageable pageable);

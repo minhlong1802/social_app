@@ -54,17 +54,11 @@ public class PostController {
     // Get posts by user id
     @Operation(summary = "Get posts by user id")
     @GetMapping("/user")
-    public ResponseEntity<Object> getPostsByUserId() {
+    public ResponseEntity<Object> getPostsByUserId(@RequestParam(defaultValue = "1") Integer pageNo,
+                                                   @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<PostResponse> posts = postService.getPostsByUserId();
+            List<PostResponse> posts = postService.getPostsByUserId(pageNo, pageSize);
             return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
-            log.error("Error getPostsByUserId", e);
-            return APIResponse.responseBuilder(
-                    null,
-                    Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
-            );
         } catch (Exception e) {
             log.error("Error getPostsByUserId", e);
             return APIResponse.responseBuilder(
@@ -81,7 +75,7 @@ public class PostController {
     public ResponseEntity<Object> createPost(@RequestPart(required = false) String content,
                                              @RequestPart(name = "imageUrl", required = false) MultipartFile file) {
         try {
-            Post post = postService.createPost(content,file);
+            PostResponse post = postService.createPost(content,file);
             return APIResponse.responseBuilder(post, "Post created successfully", HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("Error createPost", e);
@@ -115,7 +109,7 @@ public class PostController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Post post = postService.updatePost(content, file, id);
+            PostResponse post = postService.updatePost(content, file, id);
             return APIResponse.responseBuilder(post, "Post updated successfully", HttpStatus.OK);
         } catch (NumberFormatException e) {
             return APIResponse.responseBuilder(

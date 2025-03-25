@@ -134,10 +134,10 @@ public class AuthController {
             );
         }
         try {
-            String response = userService.registerUser(request);
+            User response = userService.registerUser(request);
             return APIResponse.responseBuilder(
-                    null,
-                    response,
+                    response.getId(),
+                    "User registered successfully. Your username is " + response.getUsername() + ". Please use your username to later login",
                     HttpStatus.OK
             );
         } catch (RuntimeException e) {
