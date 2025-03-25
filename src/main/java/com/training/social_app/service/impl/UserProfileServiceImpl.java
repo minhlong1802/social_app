@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -34,6 +35,9 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Autowired
     private final UserRepository userRepository;
 
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
     private Integer getCurrentUserId() {
         User currentUser = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
@@ -42,9 +46,10 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     public UserProfile getUserProfileByUserId() {
         Integer userId = getCurrentUserId();
-        return userProfileRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User profile not found for user id: " + userId));
+        return userProfileRepository.findByUserId(userId).orElseThrow(() -> new EntityNotFoundException("User profile not found for user id: " + userId));
     }
 
+    @Override
     public UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile, MultipartFile file) {
         if (userProfile == null) {
             userProfile = new UserProfileRequest();
@@ -57,7 +62,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         Integer userId = getCurrentUserId();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
         Optional<UserProfile> existingUserProfile = userProfileRepository.findByUserId(userId);
         UserProfile profile;
 
@@ -73,6 +78,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         profile.setBirthDate(userProfile.getBirthDate() != null ? LocalDate.parse(userProfile.getBirthDate()) : null);
         profile.setOccupation(userProfile.getOccupation());
         profile.setLocation(userProfile.getLocation());
+        profile.setUpdatedAt(LocalDateTime.now());
 
         if (file != null && !file.isEmpty()) {
             // Validate file type
@@ -104,7 +110,4 @@ public class UserProfileServiceImpl implements UserProfileService {
         Integer userId = getCurrentUserId();
         userProfileRepository.deleteByUserId(userId);
     }
-
-    @Value("${file.upload-dir}")
-    private String uploadDir;
 }

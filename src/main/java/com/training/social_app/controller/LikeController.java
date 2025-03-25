@@ -42,12 +42,12 @@ public class LikeController {
                     "Invalid postId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error likePost", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         }catch (Exception e) {
             log.error("Error likePost", e);
@@ -82,6 +82,12 @@ public class LikeController {
                     null,
                     "Invalid postId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
+            );
+        }catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getLikesForPost", e);
@@ -121,7 +127,7 @@ public class LikeController {
             return APIResponse.responseBuilder(
                     null,
                     e.getMessage(),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getLikeById", e);

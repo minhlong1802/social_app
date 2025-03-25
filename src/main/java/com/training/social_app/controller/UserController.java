@@ -2,6 +2,7 @@ package com.training.social_app.controller;
 
 import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.response.APIResponse;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
@@ -58,12 +59,12 @@ public class UserController {
                     e.getMessage(),
                     HttpStatus.NOT_FOUND
             );
-        } catch (RuntimeException e) {
+        } catch (UserForbiddenException e) {
             log.error("Error deleteUser", e);
             return APIResponse.responseBuilder(
                     null,
                     e.getMessage(),
-                    HttpStatus.UNAUTHORIZED
+                    HttpStatus.FORBIDDEN
             );
         } catch (Exception e) {
             log.error("Error deleteUser", e);
@@ -85,6 +86,13 @@ public class UserController {
                     userService.findAll(searchText, pageNo, pageSize),
                     "Users retrieved successfully",
                     HttpStatus.OK
+            );
+        }catch (UserForbiddenException e) {
+            log.error("Error findAll", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
             );
         } catch (Exception e) {
             log.error("Error findAll", e);

@@ -3,8 +3,8 @@ package com.training.social_app.controller;
 import com.training.social_app.dto.request.CommentRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.Comment;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.CommentService;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -47,12 +47,12 @@ public class CommentController {
             }
             Comment comment = commentService.commentPost(commentRequest);
             return APIResponse.responseBuilder(comment, "Post commented successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error commentPost", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error commentPost", e);
@@ -98,7 +98,21 @@ public class CommentController {
                     "Invalid postId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        }  catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
+            log.error("Error commentPost", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (UserForbiddenException e) {
+            log.error("Error editComment", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (RuntimeException e) {
             log.error("Error editComment", e);
             return APIResponse.responseBuilder(
                     null,
@@ -136,12 +150,19 @@ public class CommentController {
                     "Invalid postId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error deleteComment", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (UserForbiddenException e) {
+            log.error("Error deleteComment", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.FORBIDDEN
             );
         } catch (Exception e) {
             log.error("Error deleteComment", e);
@@ -231,30 +252,4 @@ public class CommentController {
             );
         }
     }
-
-//    // Count comments for a user in the past week
-//    @GetMapping("/count")
-//    public ResponseEntity<Object> countCommentsForUserInPastWeek() {
-//        try {
-//            return APIResponse.responseBuilder(
-//                    commentService.countCommentsForUserInPastWeek(),
-//                    "Comments counted successfully",
-//                    HttpStatus.OK
-//            );
-//        } catch (RuntimeException e) {
-//            log.error("Error countCommentsForUserInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    Objects.requireNonNull(e.getMessage()),
-//                    HttpStatus.BAD_REQUEST
-//            );
-//        } catch (Exception e) {
-//            log.error("Error countCommentsForUserInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    "An unexpected error occurred",
-//                    HttpStatus.INTERNAL_SERVER_ERROR
-//            );
-//        }
-//    }
 }

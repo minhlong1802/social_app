@@ -10,6 +10,5 @@ public interface CommentService {
     Comment editComment(CommentRequest commentRequest, Integer commentId);
     void deleteComment(Integer postId);
     List<Comment> getCommentsByPostId(Integer postId, Integer page, Integer size);
-    int countCommentsForUserInPastWeek();
     Comment getCommentById(Integer commentId);
 }

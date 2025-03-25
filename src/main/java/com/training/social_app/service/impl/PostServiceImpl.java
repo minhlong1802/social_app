@@ -5,6 +5,7 @@ import com.training.social_app.dto.response.PostResponse;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.repository.*;
 import com.training.social_app.service.PostService;
 import com.training.social_app.utils.UserContext;
@@ -25,9 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,25 +69,6 @@ public class PostServiceImpl implements PostService {
         postDTO.setCreatedAt(post.getCreatedAt());
         postDTO.setUpdatedAt(post.getUpdatedAt());
         return postDTO;
-    }
-
-    @Override
-    public int countPostsForUserInPastWeek() {
-        Integer userId = getCurrentUserId();
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, cal.getWeeksInWeekYear());
-        if(cal.getFirstDayOfWeek() != Calendar.MONDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        }
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = LocalDateTime.now();
-        return postRepository.countByUserIdAndCreatedAtBetween(userId, startDateTime, endDateTime);
     }
 
     @Override
@@ -146,7 +126,6 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
-
         return postRepository.save(newPost);
     }
 
@@ -156,7 +135,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to update this post");
+            throw new UserForbiddenException("You are not allowed to update this post");
         }
         if ((content == null || content.isEmpty()) && (file == null || file.isEmpty())) {
             throw new RuntimeException("Post cannot be empty");
@@ -190,7 +169,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to delete this post");
+            throw new UserForbiddenException("You are not allowed to delete this post");
         }
         postRepository.delete(post);
     }
@@ -200,7 +179,7 @@ public class PostServiceImpl implements PostService {
         User user = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("User is not authorized to see all posts");
+            throw new UserForbiddenException("You are not allowed to see all posts");
         }
         if (page > 0) {
             page = page - 1;
@@ -214,7 +193,7 @@ public class PostServiceImpl implements PostService {
     public void deletePosts(DeleteRequest request){
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("User is not authorized to delete posts");
+            throw new UserForbiddenException("User is not authorized to delete posts");
         }
 
         List<Integer> ids = request.getIds();

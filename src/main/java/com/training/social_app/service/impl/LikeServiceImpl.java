@@ -45,8 +45,8 @@ public class LikeServiceImpl implements LikeService {
     public Like likePost(Integer postId) {
         Integer userId = getCurrentUserId();
         // Handle validation
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found for id: " + postId));
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
 
         // Check if the like already exists
         Optional<Like> existingLike = likeRepository.findByUserIdAndPostId(userId, postId);
@@ -60,25 +60,6 @@ public class LikeServiceImpl implements LikeService {
         like.setPost(post);
         like.setUser(user);
         return likeRepository.save(like);
-    }
-
-    @Override
-    public int countLikesForUserInPastWeek() {
-        Integer userId = getCurrentUserId();
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, cal.getWeeksInWeekYear());
-        if(cal.getFirstDayOfWeek() != Calendar.MONDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        }
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = LocalDateTime.now();
-        return likeRepository.countLikesByUserAndDate(userId, startDateTime, endDateTime);
     }
 
     @Override

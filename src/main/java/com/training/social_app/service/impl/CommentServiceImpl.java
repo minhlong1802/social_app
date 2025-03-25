@@ -3,6 +3,7 @@ package com.training.social_app.service.impl;
 import com.training.social_app.dto.request.CommentRequest;
 import com.training.social_app.entity.Comment;
 import com.training.social_app.entity.User;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.repository.CommentRepository;
 import com.training.social_app.repository.PostRepository;
 import com.training.social_app.repository.UserRepository;
@@ -59,7 +60,7 @@ public class CommentServiceImpl implements CommentService {
         //Handle validation
         Comment existingComment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
         if (!existingComment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("User is not authorized to update this comment");
+            throw new UserForbiddenException("You are not allowed to update this comment");
         }
         if(commentRequest.getPostId() != null){
             throw new RuntimeException("Cannot update this field")        ;
@@ -75,7 +76,7 @@ public class CommentServiceImpl implements CommentService {
         //Handle validation
         Comment existingComment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
         if (!existingComment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("User is not authorized to delete this comment");
+            throw new UserForbiddenException("You are not allowed to delete this comment");
         }
         commentRepository.delete(existingComment);
     }
@@ -91,25 +92,6 @@ public class CommentServiceImpl implements CommentService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Comment> pageComments = commentRepository.findAllByPostId(postId, pageable);
         return pageComments.getContent();
-    }
-
-    @Override
-    public int countCommentsForUserInPastWeek() {
-        Integer userId = getCurrentUserId();
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, cal.getWeeksInWeekYear());
-        if(cal.getFirstDayOfWeek() != Calendar.MONDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        }
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = LocalDateTime.now();
-        return commentRepository.countCommentsByUserIdAndCreatedAtBetween(userId, startDateTime, endDateTime);
     }
 
     @Override

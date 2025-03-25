@@ -6,6 +6,7 @@ import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.Role;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.UserService;
 import com.training.social_app.utils.UserContext;
@@ -58,11 +59,6 @@ public class UserServiceImpl implements UserService {
 
     private String generateOtp() {
         return String.valueOf((int) (Math.random() * 900000) + 100000);
-    }
-
-    @Override
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found for email: " + email));
     }
 
     @Override
@@ -134,7 +130,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUsers(DeleteRequest request) {
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("User is not authorized to delete users");
+            throw new UserForbiddenException("User is not allowed to delete users");
         }
 
         List<Integer> ids = request.getIds();
@@ -157,7 +153,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> findAll(String searchText, int page, int size) {
-        try {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new UserForbiddenException("User is not allowed to see all users");
+        }
             if (page > 0) {
                 page = page - 1;
             }
@@ -174,10 +173,6 @@ public class UserServiceImpl implements UserService {
             return pageUser.getContent().stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private UserResponse convertToDTO(User user) {

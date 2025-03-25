@@ -2,8 +2,6 @@ package com.training.social_app.repository;
 
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -42,18 +40,6 @@ public interface FriendShipRepository extends JpaRepository<FriendShip, Integer>
     @Transactional
     @Query("UPDATE FriendShip f SET f.status = 'REJECTED' where f.user2.id = :userId and f.id = :requestId and f.status = 'PENDING'")
     void rejectFriendRequest(Integer userId, Integer requestId);
-
-    //Count friends of a user
-    @Query("SELECT COUNT(f) FROM FriendShip f where f.user1.id = :userId and f.status = 'ACCEPTED'")
-    int countFriendsByUserId(Integer userId);
-
-    //Count friend requests sent by a user
-    @Query("SELECT COUNT(f) FROM FriendShip f where f.user1.id = :userId and f.status = 'PENDING'")
-    int countFriendRequestsByUserId(Integer userId);
-
-    //Count friend requests received by a user
-    @Query("SELECT COUNT(f) FROM FriendShip f where f.user2.id = :userId and f.status = 'PENDING'")
-    int countFriendRequestsToUserId(Integer userId);
 
     //Count new friends of a user in the past week
     @Query("SELECT COUNT(f) FROM FriendShip f where f.user2.id = :userId and f.status = 'ACCEPTED' and f.createdAt between :startDate and :endDate")

@@ -16,5 +16,4 @@ public interface FriendShipService {
     void acceptFriendRequest(Integer requestId);
     void rejectFriendRequest(Integer requestId);
     void unfriend(Integer friendId);
-    int countFriendsInPastWeek();
 }

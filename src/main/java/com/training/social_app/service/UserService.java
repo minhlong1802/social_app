@@ -5,15 +5,12 @@ import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
-import jakarta.persistence.criteria.CriteriaBuilder;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface UserService {
     String login(LoginRequest request);
     String registerUser(UserRequest request);
-    User findByEmail(String email);
     User findByUsername(String username);
     boolean verifyOtp(User user, String otp);
     String generateForgotPasswordToken(String email);

@@ -13,7 +13,6 @@ public interface PostService {
     void deletePost(Integer postId);
     List<PostResponse> getPostsByUserId();
     List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size);
-    int countPostsForUserInPastWeek();
     List<PostResponse> findAll(Integer page, Integer size);
     void deletePosts(DeleteRequest deleteRequest);
     PostResponse findById(Integer postId);

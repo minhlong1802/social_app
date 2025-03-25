@@ -5,9 +5,12 @@ import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.entity.UserProfile;
 import com.training.social_app.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jdk.jfr.ContentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,12 +38,12 @@ public class UserProfileController {
         try {
             UserProfile userProfile = userProfileService.getUserProfileByUserId();
             return APIResponse.responseBuilder(userProfile, "User profile retrieved successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error getUserProfile", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getUserProfile", e);
@@ -55,8 +58,9 @@ public class UserProfileController {
     //Update user profile
     @Operation(summary = "Update user profile")
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<?> saveOrUpdateUserProfile(@RequestPart(name= "userProfile" , required = false)  @Valid UserProfileRequest userProfile,
-                                                     @RequestPart(name="avatarUrl", required = false)  MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<?> saveOrUpdateUserProfile(@RequestPart(name="avatarUrl", required = false)  MultipartFile file,
+                                                     @RequestPart(name= "userProfile" , required = false) @Valid UserProfileRequest userProfile,
+                                                      BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             bindingResult.getFieldErrors().forEach(error ->
@@ -71,7 +75,14 @@ public class UserProfileController {
         try {
             UserProfile updatedUserProfile = userProfileService.saveOrUpdateUserProfile(userProfile, file);
             return APIResponse.responseBuilder(updatedUserProfile, "User profile updated successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
+            log.error("Error saveOrUpdateUserProfile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (RuntimeException e) {
             log.error("Error saveOrUpdateUserProfile", e);
             return APIResponse.responseBuilder(
                     null,
@@ -114,7 +125,7 @@ public class UserProfileController {
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getUserProfileByProfileId", e);
@@ -133,7 +144,14 @@ public class UserProfileController {
         try {
             userProfileService.deleteUserProfile();
             return APIResponse.responseBuilder(null, "User profile deleted successfully", HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
+            log.error("Error deleteUserProfile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (Exception e) {
             log.error("Error deleteUserProfile", e);
             return APIResponse.responseBuilder(
                     null,

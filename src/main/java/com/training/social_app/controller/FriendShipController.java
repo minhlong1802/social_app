@@ -29,12 +29,12 @@ public class FriendShipController {
         try {
             List<User> friends = friendShipService.getFriends();
             return APIResponse.responseBuilder(friends, "Friends retrieved successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error getFriendsOfUser", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getFriendsOfUser", e);
@@ -58,7 +58,7 @@ public class FriendShipController {
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getFriendRequestsOfUser", e);
@@ -82,7 +82,7 @@ public class FriendShipController {
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getFriendRequestsToUser", e);
@@ -115,12 +115,12 @@ public class FriendShipController {
                     "Invalid friendId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        }  catch (RuntimeException e) {
+        }  catch (EntityNotFoundException e) {
             log.error("Error getFriendshipByFriendId", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error getFriendshipByFriendId", e);
@@ -152,7 +152,14 @@ public class FriendShipController {
                     "Invalid requesteeId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        }  catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
+            log.error("Error sendFriendRequest", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (RuntimeException e) {
             log.error("Error sendFriendRequest", e);
             return APIResponse.responseBuilder(
                     null,
@@ -189,12 +196,12 @@ public class FriendShipController {
                     "Invalid requestId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error acceptFriendRequest", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error acceptFriendRequest", e);
@@ -227,12 +234,12 @@ public class FriendShipController {
                     "Invalid requestId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error rejectFriendRequest", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error rejectFriendRequest", e);
@@ -264,14 +271,21 @@ public class FriendShipController {
                     "Invalid friendId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
+        } catch (EntityNotFoundException e) {
+            log.error("Error unfriend", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
         } catch (RuntimeException e) {
             log.error("Error unfriend", e);
             return APIResponse.responseBuilder(
                     null,
-                    Objects.requireNonNull(e.getMessage()),
+                    e.getMessage(),
                     HttpStatus.BAD_REQUEST
             );
-        } catch (Exception e) {
+        }catch (Exception e) {
             log.error("Error unfriend", e);
             return APIResponse.responseBuilder(
                     null,
@@ -280,27 +294,4 @@ public class FriendShipController {
             );
         }
     }
-
-//    //Count friends in past week
-//    @GetMapping("/count")
-//    public ResponseEntity<Object> countFriendsInPastWeek() {
-//        try {
-//            int count = friendShipService.countFriendsInPastWeek();
-//            return APIResponse.responseBuilder(count, "Friends count retrieved successfully", HttpStatus.OK);
-//        } catch (RuntimeException e) {
-//            log.error("Error countFriendsInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    Objects.requireNonNull(e.getMessage()),
-//                    HttpStatus.BAD_REQUEST
-//            );
-//        } catch (Exception e) {
-//            log.error("Error countFriendsInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    "An unexpected error occurred",
-//                    HttpStatus.INTERNAL_SERVER_ERROR
-//            );
-//        }
-//    }
 }

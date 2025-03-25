@@ -4,6 +4,7 @@ import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.dto.response.PostResponse;
 import com.training.social_app.entity.Post;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
@@ -74,28 +75,6 @@ public class PostController {
         }
     }
 
-//    @GetMapping("/count")
-//    public ResponseEntity<Object> countPostsForUserInPastWeek() {
-//        try {
-//            int count = postService.countPostsForUserInPastWeek();
-//            return APIResponse.responseBuilder(count, "Posts count retrieved successfully", HttpStatus.OK);
-//        } catch (RuntimeException e) {
-//            log.error("Error countPostsForUserInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    Objects.requireNonNull(e.getMessage()),
-//                    HttpStatus.BAD_REQUEST
-//            );
-//        } catch (Exception e) {
-//            log.error("Error countPostsForUserInPastWeek occurred", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    "An unexpected error occurred",
-//                    HttpStatus.INTERNAL_SERVER_ERROR
-//            );
-//        }
-//    }
-
     // Create post
     @Operation(summary = "Create post")
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
@@ -144,14 +123,21 @@ public class PostController {
                     "Invalid postId. It must be an integer.",
                     HttpStatus.BAD_REQUEST
             );
-        }catch (RuntimeException e) {
+        }catch (UserForbiddenException e) {
+            log.error("Error updatePost", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (RuntimeException e) {
             log.error("Error updatePost", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
                     HttpStatus.BAD_REQUEST
             );
-        } catch (Exception e) {
+        }catch (Exception e) {
             log.error("Error updatePost", e);
             return APIResponse.responseBuilder(
                     null,
@@ -188,7 +174,7 @@ public class PostController {
                     e.getMessage(),
                     HttpStatus.NOT_FOUND
             );
-        } catch (RuntimeException e) {
+        } catch (UserForbiddenException e) {
             log.error("Error deletePost", e);
             return APIResponse.responseBuilder(
                     null,
@@ -223,7 +209,7 @@ public class PostController {
                     e.getMessage(),
                     HttpStatus.BAD_REQUEST
             );
-        } catch (RuntimeException e) {
+        } catch (UserForbiddenException e) {
             log.error("Error findAll", e);
             return APIResponse.responseBuilder(
                     null,
@@ -258,7 +244,7 @@ public class PostController {
                     e.getMessage(),
                     HttpStatus.NOT_FOUND
             );
-        } catch (RuntimeException e) {
+        } catch (UserForbiddenException e) {
             log.error("Error deletePosts", e);
             return APIResponse.responseBuilder(
                     null,
