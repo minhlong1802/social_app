@@ -110,4 +110,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         Integer userId = getCurrentUserId();
         userProfileRepository.deleteByUserId(userId);
     }
+
+    @Override
+    public UserProfile getUserProfileById(Integer id) {
+        userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + id));
+        return userProfileRepository.findByUserId(id).orElseThrow(() -> new EntityNotFoundException("User profile not found for id: " + id));
+    }
 }

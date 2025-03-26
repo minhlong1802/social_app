@@ -160,4 +160,42 @@ public class UserProfileController {
             );
         }
     }
+
+    //Get user profile by id
+    @Operation(summary = "Get user profile by user id")
+    @GetMapping("/user/{id}")
+    public ResponseEntity<Object> getUserProfileById(@PathVariable String id) {
+        try {
+            int userId = Integer.parseInt(id);
+            if(userId <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "User id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            UserProfile userProfile = userProfileService.getUserProfileById(userId);
+            return APIResponse.responseBuilder(userProfile, "User profile retrieved successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid userId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error getUserProfileById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Error getUserProfileById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

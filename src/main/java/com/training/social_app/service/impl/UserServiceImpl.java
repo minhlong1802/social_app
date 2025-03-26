@@ -5,8 +5,10 @@ import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
+import com.training.social_app.entity.UserProfile;
 import com.training.social_app.enums.Role;
 import com.training.social_app.exception.UserForbiddenException;
+import com.training.social_app.repository.UserProfileRepository;
 import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.UserService;
 import com.training.social_app.utils.UserContext;
@@ -37,6 +39,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Autowired
+    private final UserProfileRepository userProfileRepository;
+
+    @Autowired
     private final BCryptPasswordEncoder bCryptPasswordEncoder; //bcrypt password encoder
 
     @Override
@@ -53,6 +58,16 @@ public class UserServiceImpl implements UserService {
         user.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         userRepository.save(user);
+
+        UserProfile userProfile = new UserProfile();
+        userProfile.setUser(user);
+        userProfile.setFullName(null);
+        userProfile.setBirthDate(null);
+        userProfile.setOccupation(null);
+        userProfile.setLocation(null);
+        userProfile.setAvatarUrl(null);
+        userProfileRepository.save(userProfile);
+        user.setUserProfile(userProfile);
 
         return user;
     }
@@ -180,6 +195,13 @@ public class UserServiceImpl implements UserService {
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
         userDTO.setEmail(user.getEmail());
+        if (user.getUserProfile() != null) {
+            userDTO.setFullName(user.getUserProfile().getFullName());
+            userDTO.setBirthDate(user.getUserProfile().getBirthDate());
+            userDTO.setOccupation(user.getUserProfile().getOccupation());
+            userDTO.setLocation(user.getUserProfile().getLocation());
+            userDTO.setAvatarUrl(user.getUserProfile().getAvatarUrl());
+        }
         return userDTO;
     }
 
@@ -188,5 +210,26 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
         return convertToDTO(user);
+    }
+
+    @Override
+    public UserResponse getUserProfile() {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return convertToDTO(user);
+    }
+
+    @Override
+    public List<UserResponse> searchUser(String searchText, int page, int size) {
+        if (searchText == null || searchText.isEmpty()) {
+            throw new RuntimeException("Search text is required");
+        }
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> usersPage = userRepository.findByUserProfileFullNameContaining(searchText, pageable);
+        return usersPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 }

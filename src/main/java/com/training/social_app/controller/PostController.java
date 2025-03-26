@@ -3,7 +3,6 @@ package com.training.social_app.controller;
 import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.response.APIResponse;
 import com.training.social_app.dto.response.PostResponse;
-import com.training.social_app.entity.Post;
 import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;

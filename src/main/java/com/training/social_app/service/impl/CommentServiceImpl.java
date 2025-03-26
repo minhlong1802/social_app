@@ -1,6 +1,7 @@
 package com.training.social_app.service.impl;
 
 import com.training.social_app.dto.request.CommentRequest;
+import com.training.social_app.dto.response.CommentResponse;
 import com.training.social_app.entity.Comment;
 import com.training.social_app.entity.User;
 import com.training.social_app.exception.UserForbiddenException;
@@ -18,10 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +42,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public Comment commentPost(CommentRequest commentRequest) {
+    public CommentResponse commentPost(CommentRequest commentRequest) {
         Integer userId = getCurrentUserId();
         //Handle validation
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
@@ -51,11 +51,11 @@ public class CommentServiceImpl implements CommentService {
         comment.setPost(postRepository.findById(commentRequest.getPostId()).orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + commentRequest.getPostId())));
         comment.setUser(user);
         comment.setContent(commentRequest.getContent());
-        return commentRepository.save(comment);
+        return convertToDto(commentRepository.save(comment)) ;
     }
 
     @Override
-    public Comment editComment(CommentRequest commentRequest,Integer commentId ) {
+    public CommentResponse editComment(CommentRequest commentRequest,Integer commentId ) {
         Integer userId = getCurrentUserId();
         //Handle validation
         Comment existingComment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
@@ -67,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
         }
         existingComment.setContent(commentRequest.getContent());
         existingComment.setUpdatedAt(LocalDateTime.now());
-        return commentRepository.save(existingComment);
+        return convertToDto(commentRepository.save(existingComment)) ;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<Comment> getCommentsByPostId(Integer postId, Integer page, Integer size) {
+    public List<CommentResponse> getCommentsByPostId(Integer postId, Integer page, Integer size) {
         if (postRepository.findById(postId).isEmpty()) {
             throw new EntityNotFoundException("Post not found for id: " + postId);
         }
@@ -91,11 +91,23 @@ public class CommentServiceImpl implements CommentService {
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<Comment> pageComments = commentRepository.findAllByPostId(postId, pageable);
-        return pageComments.getContent();
+        return pageComments.getContent().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @Override
-    public Comment getCommentById(Integer commentId) {
-        return commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
+    public CommentResponse getCommentById(Integer commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found for id: " + commentId));
+        return convertToDto(comment);
+    }
+
+    private CommentResponse convertToDto(Comment comment) {
+        CommentResponse commentResponse = new CommentResponse();
+        commentResponse.setId(comment.getId());
+        commentResponse.setPostId(comment.getPost().getId());
+        commentResponse.setUserId(comment.getUser().getId());
+        commentResponse.setContent(comment.getContent());
+        commentResponse.setCreatedAt(comment.getCreatedAt());
+        commentResponse.setUpdatedAt(comment.getUpdatedAt());
+        return commentResponse;
     }
 }

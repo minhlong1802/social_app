@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.response.FriendShipResponse;
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.RequestStatus;
@@ -37,10 +38,11 @@ public class FriendShipServiceImpl implements FriendShipService {
     }
 
     @Override
-    public FriendShip getFriendship(Integer friendId) {
+    public FriendShipResponse getFriendship(Integer friendId) {
         Integer userId = getCurrentUserId();
-        return friendShipRepository.findByUser1IdAndUser2Id(userId, friendId)
+        FriendShip friendShip = friendShipRepository.findByUser1IdAndUser2Id(userId, friendId)
                 .orElseThrow(() -> new EntityNotFoundException("Friendship not found for user id: " + userId + " and friend id: " + friendId));
+        return convertToDto(friendShip);
     }
 
     @Override
@@ -56,40 +58,53 @@ public class FriendShipServiceImpl implements FriendShipService {
     }
 
     @Override
-    public void sendFriendRequest(Integer requesteeId) {
+    public FriendShipResponse sendFriendRequest(Integer requesteeId) {
         Integer requesterId = getCurrentUserId();
-        if(friendShipRepository.findByUser1IdAndUser2Id(userRepository.findById(requesteeId).orElseThrow(() -> new EntityNotFoundException("User not found for requestee id: " + requesteeId)).getId(), requesterId).isPresent()) {
+        if(friendShipRepository.findByUser1IdAndUser2Id(requesterId,userRepository.findById(requesteeId).orElseThrow(() -> new EntityNotFoundException("User not found for requestee id: " + requesteeId)).getId() ).isPresent()) {
             throw new RuntimeException("Friend request already sent or accepted");
         }
         FriendShip friendShip = new FriendShip();
         friendShip.setUser1(userRepository.findById(requesterId).orElseThrow(() -> new EntityNotFoundException("User not found for requester id: " + requesterId)));
         friendShip.setUser2(userRepository.findById(requesteeId).orElseThrow(() -> new EntityNotFoundException("User not found for requestee id: " + requesteeId)));
         friendShip.setStatus(RequestStatus.PENDING);
-        friendShipRepository.save(friendShip);
+        return convertToDto( friendShipRepository.save(friendShip));
+    }
+
+    private FriendShipResponse convertToDto(FriendShip friendShip) {
+        FriendShipResponse friendShipResponse = new FriendShipResponse();
+        friendShipResponse.setId(friendShip.getId());
+        friendShipResponse.setUser1Id(friendShip.getUser1().getId());
+        friendShipResponse.setUser2Id(friendShip.getUser2().getId());
+        friendShipResponse.setStatus(friendShip.getStatus());
+        friendShipResponse.setCreatedAt(friendShip.getCreatedAt());
+        friendShipResponse.setUpdatedAt(friendShip.getUpdatedAt())   ;
+        return friendShipResponse;
     }
 
     @Override
-    public void acceptFriendRequest(Integer requestId) {
+    public FriendShipResponse acceptFriendRequest(Integer requestId) {
         Integer userId = getCurrentUserId();
-        if (friendShipRepository.findById(requestId).isEmpty()) {
-            throw new EntityNotFoundException("Friend request not found for id: " + requestId);
-        }
-        if(!Objects.equals(friendShipRepository.findById(requestId).get().getUser2().getId(), userId)) {
+        FriendShip friendShip = friendShipRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException("Friend request not found for id: " + requestId));
+        if (!Objects.equals(friendShip.getUser2().getId(), userId)) {
             throw new EntityNotFoundException("Friend request not found for user id: " + userId);
         }
         friendShipRepository.acceptFriendRequest(userId, requestId);
+        friendShip.setStatus(RequestStatus.ACCEPTED);
+        return convertToDto(friendShip);
     }
 
     @Override
-    public void rejectFriendRequest(Integer requestId) {
+    public FriendShipResponse rejectFriendRequest(Integer requestId) {
         Integer userId = getCurrentUserId();
-        if (friendShipRepository.findById(requestId).isEmpty()) {
-            throw new EntityNotFoundException("Friend request not found for id: " + requestId);
-        }
-        if(!Objects.equals(friendShipRepository.findById(requestId).get().getUser2().getId(), userId)) {
+        FriendShip friendShip = friendShipRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException("Friend request not found for id: " + requestId));
+        if (!Objects.equals(friendShip.getUser2().getId(), userId)) {
             throw new EntityNotFoundException("Friend request not found for user id: " + userId);
         }
         friendShipRepository.rejectFriendRequest(userId, requestId);
+        friendShip.setStatus(RequestStatus.REJECTED);
+        return convertToDto(friendShip);
     }
 
     @Override

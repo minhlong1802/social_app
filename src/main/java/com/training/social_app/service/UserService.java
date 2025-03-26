@@ -19,4 +19,7 @@ public interface UserService {
     void deleteUsers(DeleteRequest request);
     List<UserResponse> findAll(String searchText, int page, int size);
     UserResponse findById(Integer userId);
+    UserResponse getUserProfile();
+    //search user by full name (for normal user)
+    List<UserResponse> searchUser(String searchText, int page, int size);
 }

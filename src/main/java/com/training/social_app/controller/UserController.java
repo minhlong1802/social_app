@@ -87,7 +87,7 @@ public class UserController {
                     "Users retrieved successfully",
                     HttpStatus.OK
             );
-        }catch (UserForbiddenException e) {
+        } catch (UserForbiddenException e) {
             log.error("Error findAll", e);
             return APIResponse.responseBuilder(
                     null,
@@ -122,6 +122,61 @@ public class UserController {
             );
         } catch (Exception e) {
             log.error("Error findById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    //Find current user info
+    @Operation(summary = "Find current user info")
+    @GetMapping("/current")
+    public ResponseEntity<?> findCurrentUser() {
+        try {
+            return APIResponse.responseBuilder(
+                    userService.getUserProfile(),
+                    "User retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error findCurrentUser", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Error findCurrentUser", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Operation(summary = "Search users")
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUser(@RequestParam String searchText,
+                                        @RequestParam(defaultValue = "1") Integer pageNo,
+                                        @RequestParam(defaultValue = "10") Integer pageSize) {
+        try {
+            return APIResponse.responseBuilder(
+                    userService.searchUser(searchText, pageNo, pageSize),
+                    "Users retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (RuntimeException e) {
+            log.error("Error searchUser", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Error searchUser", e);
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred",

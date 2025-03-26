@@ -1,7 +1,7 @@
 package com.training.social_app.controller;
 
 import com.training.social_app.dto.response.APIResponse;
-import com.training.social_app.entity.FriendShip;
+import com.training.social_app.dto.response.FriendShipResponse;
 import com.training.social_app.entity.User;
 import com.training.social_app.service.FriendShipService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,7 +107,7 @@ public class FriendShipController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            FriendShip friendShip = friendShipService.getFriendship(id);
+            FriendShipResponse friendShip = friendShipService.getFriendship(id);
             return APIResponse.responseBuilder(friendShip, "Friendship retrieved successfully", HttpStatus.OK);
         }catch (NumberFormatException e) {
             return APIResponse.responseBuilder(
@@ -144,8 +144,8 @@ public class FriendShipController {
                         "Requestee id must be greater than 0",
                         HttpStatus.BAD_REQUEST
                 );            }
-            friendShipService.sendFriendRequest(id);
-            return APIResponse.responseBuilder(null, "Friend request sent successfully", HttpStatus.OK);
+            FriendShipResponse friendShip =  friendShipService.sendFriendRequest(id);
+            return APIResponse.responseBuilder(friendShip, "Friend request sent successfully", HttpStatus.OK);
         }catch (NumberFormatException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -188,8 +188,8 @@ public class FriendShipController {
                         "Request id must be greater than 0",
                         HttpStatus.BAD_REQUEST
                 );            }
-            friendShipService.acceptFriendRequest(id);
-            return APIResponse.responseBuilder(null, "Friend request accepted successfully", HttpStatus.OK);
+            FriendShipResponse response = friendShipService.acceptFriendRequest(id);
+            return APIResponse.responseBuilder(response, "Friend request accepted successfully", HttpStatus.OK);
         } catch (NumberFormatException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -226,8 +226,8 @@ public class FriendShipController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            friendShipService.rejectFriendRequest(id);
-            return APIResponse.responseBuilder(null, "Friend request rejected successfully", HttpStatus.OK);
+            FriendShipResponse response = friendShipService.rejectFriendRequest(id);
+            return APIResponse.responseBuilder(response, "Friend request rejected successfully", HttpStatus.OK);
         } catch (NumberFormatException e) {
             return APIResponse.responseBuilder(
                     null,

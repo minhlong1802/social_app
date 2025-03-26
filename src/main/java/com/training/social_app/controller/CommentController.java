@@ -2,7 +2,7 @@ package com.training.social_app.controller;
 
 import com.training.social_app.dto.request.CommentRequest;
 import com.training.social_app.dto.response.APIResponse;
-import com.training.social_app.entity.Comment;
+import com.training.social_app.dto.response.CommentResponse;
 import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-//http://localhost:8080/swagger-ui/index.html
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -45,7 +44,7 @@ public class CommentController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Comment comment = commentService.commentPost(commentRequest);
+            CommentResponse comment = commentService.commentPost(commentRequest);
             return APIResponse.responseBuilder(comment, "Post commented successfully", HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             log.error("Error commentPost", e);
@@ -90,7 +89,7 @@ public class CommentController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Comment comment = commentService.editComment(commentRequest, id);
+            CommentResponse comment = commentService.editComment(commentRequest, id);
             return APIResponse.responseBuilder(comment, "Comment edited successfully", HttpStatus.OK);
         }catch (NumberFormatException e) {
             return APIResponse.responseBuilder(
@@ -228,7 +227,7 @@ public class CommentController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Comment comment = commentService.getCommentById(id);
+            CommentResponse comment = commentService.getCommentById(id);
             return APIResponse.responseBuilder(comment, "Comment retrieved successfully", HttpStatus.OK);
         } catch (NumberFormatException e) {
             return APIResponse.responseBuilder(

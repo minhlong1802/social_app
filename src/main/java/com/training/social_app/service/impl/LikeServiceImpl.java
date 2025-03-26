@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.response.LikeResponse;
 import com.training.social_app.entity.Like;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +43,17 @@ public class LikeServiceImpl implements LikeService {
         return currentUser.getId();
     }
 
+    private LikeResponse convertToDTO(Like like) {
+        LikeResponse likeResponse = new LikeResponse();
+        likeResponse.setId(like.getId());
+        likeResponse.setPostId(like.getPost().getId());
+        likeResponse.setUserId(like.getUser().getId());
+        likeResponse.setCreatedAt(like.getCreatedAt());
+        return likeResponse;
+    }
+
     @Override
-    public Like likePost(Integer postId) {
+    public LikeResponse likePost(Integer postId) {
         Integer userId = getCurrentUserId();
         // Handle validation
         Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
@@ -52,18 +63,18 @@ public class LikeServiceImpl implements LikeService {
         Optional<Like> existingLike = likeRepository.findByUserIdAndPostId(userId, postId);
         if (existingLike.isPresent()) {
             likeRepository.delete(existingLike.get());
-            return existingLike.get();
+            return convertToDTO(existingLike.get());
         }
 
         // Create a new like
         Like like = new Like();
         like.setPost(post);
         like.setUser(user);
-        return likeRepository.save(like);
+        return convertToDTO(likeRepository.save(like)) ;
     }
 
     @Override
-    public List<Like> getLikesForPost(Integer postId, Integer page, Integer size) {
+    public List<LikeResponse> getLikesForPost(Integer postId, Integer page, Integer size) {
         Optional<Post> post = postRepository.findById(postId);
         if(post.isEmpty()) {
             throw new EntityNotFoundException("Post not found for id: " + postId);
@@ -74,7 +85,7 @@ public class LikeServiceImpl implements LikeService {
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<Like> pageLikes = likeRepository.findByPostId(postId, pageable);
-            return pageLikes.getContent();
+            return pageLikes.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -82,7 +93,8 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public Like getLikeById(Integer likeId) {
-        return likeRepository.findById(likeId).orElseThrow(() -> new EntityNotFoundException("Like not found for id: " + likeId));
+    public LikeResponse getLikeById(Integer likeId) {
+        Like like = likeRepository.findById(likeId).orElseThrow(() -> new EntityNotFoundException("Like not found for id: " + likeId));
+        return convertToDTO(like);
     }
 }

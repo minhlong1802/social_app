@@ -28,7 +28,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("data", null);
-        responseBody.put("message", "Invalid Token");
+        responseBody.put("message", "Invalid Access Token");
         responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
 
         ObjectMapper objectMapper = new ObjectMapper();
