@@ -9,6 +9,7 @@ import com.training.social_app.service.UserService;
 import com.training.social_app.service.impl.UserDetailsServiceImpl;
 import com.training.social_app.service.impl.UserServiceImpl;
 import com.training.social_app.utils.JwtTokenUtils;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -134,10 +134,10 @@ public class AuthController {
             );
         }
         try {
-            String response = userService.registerUser(request);
+            User response = userService.registerUser(request);
             return APIResponse.responseBuilder(
-                    null,
-                    response,
+                    response.getId(),
+                    "User registered successfully. Your username is " + response.getUsername() + ". Please use your username to later login",
                     HttpStatus.OK
             );
         } catch (RuntimeException e) {

@@ -1,5 +1,6 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.response.LikeResponse;
 import com.training.social_app.entity.Like;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
@@ -12,11 +13,17 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,46 +43,58 @@ public class LikeServiceImpl implements LikeService {
         return currentUser.getId();
     }
 
-    @Override
-    public Like likePost(Integer postId) {
-        Integer userId = getCurrentUserId();
-        //Check if the user has already liked the post
-        Like existingLike = likeRepository.findByUserIdAndPostId(userId, postId).orElseThrow(() -> new RuntimeException("User has already liked the post"));
-        //Handle validation
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found for id: " + postId));
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
+    private LikeResponse convertToDTO(Like like) {
+        LikeResponse likeResponse = new LikeResponse();
+        likeResponse.setId(like.getId());
+        likeResponse.setPostId(like.getPost().getId());
+        likeResponse.setUserId(like.getUser().getId());
+        likeResponse.setCreatedAt(like.getCreatedAt());
+        return likeResponse;
+    }
 
-        //Create a new like
+    @Override
+    public LikeResponse likePost(Integer postId) {
+        Integer userId = getCurrentUserId();
+        // Handle validation
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
+
+        // Check if the like already exists
+        Optional<Like> existingLike = likeRepository.findByUserIdAndPostId(userId, postId);
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+            return convertToDTO(existingLike.get());
+        }
+
+        // Create a new like
         Like like = new Like();
         like.setPost(post);
         like.setUser(user);
-        return likeRepository.save(like);
+        return convertToDTO(likeRepository.save(like)) ;
     }
 
     @Override
-    public void unlikePost(Integer postId) {
-        Integer userId = getCurrentUserId();
-        //Check if the user has already liked the post
-        Like existingLike = likeRepository.findByUserIdAndPostId(userId, postId).orElseThrow(() -> new RuntimeException("User has not liked the post"));
-        likeRepository.delete(existingLike);
-    }
-
-    @Override
-    public int countLikesForUserInPastWeek() {
-        Integer userId = getCurrentUserId();
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, cal.getWeeksInWeekYear());
-        if(cal.getFirstDayOfWeek() != Calendar.MONDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+    public List<LikeResponse> getLikesForPost(Integer postId, Integer page, Integer size) {
+        Optional<Post> post = postRepository.findById(postId);
+        if(post.isEmpty()) {
+            throw new EntityNotFoundException("Post not found for id: " + postId);
         }
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+        try {
+            if (page > 0) {
+                page = page - 1;
+            }
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Like> pageLikes = likeRepository.findByPostId(postId, pageable);
+            return pageLikes.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = LocalDateTime.now();
-        return likeRepository.countLikesByUserAndDate(userId, startDateTime, endDateTime);
+    @Override
+    public LikeResponse getLikeById(Integer likeId) {
+        Like like = likeRepository.findById(likeId).orElseThrow(() -> new EntityNotFoundException("Like not found for id: " + likeId));
+        return convertToDTO(like);
     }
 }

@@ -2,8 +2,10 @@ package com.training.social_app.controller;
 
 import com.training.social_app.dto.request.CommentRequest;
 import com.training.social_app.dto.response.APIResponse;
-import com.training.social_app.entity.Comment;
+import com.training.social_app.dto.response.CommentResponse;
+import com.training.social_app.exception.UserForbiddenException;
 import com.training.social_app.service.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,8 @@ public class CommentController {
     private final CommentService commentService;
 
     // Comment a post
-    @PostMapping("/comment")
+    @Operation(summary = "Comment a post")
+    @PostMapping()
     public ResponseEntity<Object> commentPost(@RequestBody @Valid CommentRequest commentRequest, BindingResult bindingResult) {
         try {
             Map<String, String> errors = new HashMap<>();
@@ -41,14 +44,14 @@ public class CommentController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Comment comment = commentService.commentPost(commentRequest);
+            CommentResponse comment = commentService.commentPost(commentRequest);
             return APIResponse.responseBuilder(comment, "Post commented successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (EntityNotFoundException e) {
             log.error("Error commentPost", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             log.error("Error commentPost", e);
@@ -61,9 +64,18 @@ public class CommentController {
     }
 
     // Edit a comment
+    @Operation(summary = "Edit a comment")
     @PutMapping("/{commentId}")
-    public ResponseEntity<Object> editComment(@RequestBody @Valid CommentRequest commentRequest, @PathVariable Integer commentId, BindingResult bindingResult) {
+    public ResponseEntity<Object> editComment(@RequestBody @Valid CommentRequest commentRequest, @PathVariable String commentId, BindingResult bindingResult) {
         try {
+            int id = Integer.parseInt(commentId);
+            if(id<=0){
+                return APIResponse.responseBuilder(
+                        null,
+                        "Comment id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
             Map<String, String> errors = new HashMap<>();
             if (bindingResult.hasErrors()) {
                 bindingResult.getFieldErrors().forEach(error ->
@@ -77,8 +89,28 @@ public class CommentController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Comment comment = commentService.editComment(commentRequest, commentId);
+            CommentResponse comment = commentService.editComment(commentRequest, id);
             return APIResponse.responseBuilder(comment, "Comment edited successfully", HttpStatus.OK);
+        }catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error commentPost", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (UserForbiddenException e) {
+            log.error("Error editComment", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.FORBIDDEN
+            );
         } catch (RuntimeException e) {
             log.error("Error editComment", e);
             return APIResponse.responseBuilder(
@@ -97,17 +129,39 @@ public class CommentController {
     }
 
     // Delete a comment
+    @Operation(summary = "Delete a comment")
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<Object> deleteComment(@PathVariable Integer commentId) {
+    public ResponseEntity<Object> deleteComment(@PathVariable String commentId) {
         try {
-            commentService.deleteComment(commentId);
+            int id = Integer.parseInt(commentId);
+            if(id<=0){
+                return APIResponse.responseBuilder(
+                        null,
+                        "Comment id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            commentService.deleteComment(id);
             return APIResponse.responseBuilder(null, "Comment deleted successfully", HttpStatus.OK);
-        } catch (RuntimeException e) {
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
             log.error("Error deleteComment", e);
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (UserForbiddenException e) {
+            log.error("Error deleteComment", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.FORBIDDEN
             );
         } catch (Exception e) {
             log.error("Error deleteComment", e);
@@ -120,15 +174,30 @@ public class CommentController {
     }
 
     // Get comments by post id
-    @GetMapping("/post/{postId}")
-    public ResponseEntity<Object> getCommentsByPostId(@PathVariable Integer postId) {
+    @Operation(summary = "Get comments by post id")
+    @GetMapping("/post")
+    public ResponseEntity<Object> getCommentsByPostId(@RequestParam String postId, @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
+            int id = Integer.parseInt(postId);
+            if(id <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Post id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
             return APIResponse.responseBuilder(
-                    commentService.getCommentsByPostId(postId),
+                    commentService.getCommentsByPostId(id, pageNo, pageSize),
                     "Comments retrieved successfully",
                     HttpStatus.OK
             );
-        } catch (EntityNotFoundException e) {
+        }catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid postId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }  catch (EntityNotFoundException e) {
             log.error("Error getCommentsByPostId", e);
             return APIResponse.responseBuilder(
                     null,
@@ -145,29 +214,41 @@ public class CommentController {
         }
     }
 
-//    // Count comments for a user in the past week
-//    @GetMapping("/count")
-//    public ResponseEntity<Object> countCommentsForUserInPastWeek() {
-//        try {
-//            return APIResponse.responseBuilder(
-//                    commentService.countCommentsForUserInPastWeek(),
-//                    "Comments counted successfully",
-//                    HttpStatus.OK
-//            );
-//        } catch (RuntimeException e) {
-//            log.error("Error countCommentsForUserInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    Objects.requireNonNull(e.getMessage()),
-//                    HttpStatus.BAD_REQUEST
-//            );
-//        } catch (Exception e) {
-//            log.error("Error countCommentsForUserInPastWeek", e);
-//            return APIResponse.responseBuilder(
-//                    null,
-//                    "An unexpected error occurred",
-//                    HttpStatus.INTERNAL_SERVER_ERROR
-//            );
-//        }
-//    }
+    //Get comment by id
+    @Operation(summary = "Get comment by id")
+    @GetMapping("/{commentId}")
+    public ResponseEntity<Object> getCommentById(@PathVariable String commentId) {
+        try {
+            int id = Integer.parseInt(commentId);
+            if(id <= 0) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "Comment id must be greater than 0",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            CommentResponse comment = commentService.getCommentById(id);
+            return APIResponse.responseBuilder(comment, "Comment retrieved successfully", HttpStatus.OK);
+        } catch (NumberFormatException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Invalid commentId. It must be an integer.",
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            log.error("Error getCommentById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    Objects.requireNonNull(e.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Error getCommentById", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

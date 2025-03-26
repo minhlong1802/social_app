@@ -1,10 +1,12 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.request.DeleteRequest;
+import com.training.social_app.dto.response.PostResponse;
 import com.training.social_app.entity.Post;
 import com.training.social_app.entity.User;
-import com.training.social_app.repository.FriendShipRepository;
-import com.training.social_app.repository.PostRepository;
-import com.training.social_app.repository.UserRepository;
+import com.training.social_app.enums.Role;
+import com.training.social_app.exception.UserForbiddenException;
+import com.training.social_app.repository.*;
 import com.training.social_app.service.PostService;
 import com.training.social_app.utils.UserContext;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,11 +26,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,12 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private final FriendShipRepository friendShipRepository;
 
+    @Autowired
+    private final LikeRepository likeRepository;
+
+    @Autowired
+    private final CommentRepository commentRepository;
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 
@@ -48,54 +57,60 @@ public class PostServiceImpl implements PostService {
         return currentUser.getId();
     }
 
-    @Override
-    public int countPostsForUserInPastWeek() {
-        Integer userId = getCurrentUserId();
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, cal.getWeeksInWeekYear());
-        if(cal.getFirstDayOfWeek() != Calendar.MONDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        }
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        LocalDate startDate = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = LocalDateTime.now();
-        return postRepository.countByUserIdAndCreatedAtBetween(userId, startDateTime, endDateTime);
+    private PostResponse convertToDTO(Post post) {
+        PostResponse postDTO = new PostResponse();
+        postDTO.setId(post.getId());
+        postDTO.setContent(post.getContent());
+        postDTO.setImageUrl(post.getImageUrl());
+        postDTO.setUserId(post.getUser().getId());
+        postDTO.setEdited(true);
+        postDTO.setLikeCount(likeRepository.countLikesByPostId(post.getId()));
+        postDTO.setCommentCount(commentRepository.countCommentsByPostId(post.getId()));
+        postDTO.setCreatedAt(post.getCreatedAt());
+        postDTO.setUpdatedAt(post.getUpdatedAt());
+        return postDTO;
     }
 
     @Override
-    public List<Post> getPostsByUserId() {
+    public List<PostResponse> getPostsByUserId(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
-        List<Post> postList= postRepository.findAllByUserId(userId);
-        if(postList.isEmpty()){
-            throw new RuntimeException("No posts found for user: " + UserContext.getUser().getUsername());
+        if (page > 0) {
+            page = page - 1;
         }
-        return postList;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postPage = postRepository.findAllByUserId(userId, pageable);
+        return postPage.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public List<Post> getPostsOfFriendsSortedByDate() {
+    public List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
-        List<User> friends=friendShipRepository.findFriendsByUserId(userId);
-        List<Integer> friendIds = new ArrayList<>();
-        for(User friend:friends){
-            friendIds.add(friend.getId());
+        List<User> friends = friendShipRepository.findFriendsByUserId(userId);
+        List<Integer> friendIds = friends.stream().map(User::getId).collect(Collectors.toList());
+
+        if (page > 0) {
+            page = page - 1;
         }
-        return postRepository.findByUserIdIn(friendIds, Sort.by(Sort.Direction.DESC, "createdDate"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> pagePosts = postRepository.findByUserIdIn(friendIds, pageable);
+
+        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Post createPost(String content, MultipartFile file) {
+    public PostResponse createPost(String content, MultipartFile file) {
         Integer userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
         Post newPost = new Post();
         newPost.setUser(user);
+
+        if ((content == null || content.isEmpty()) && (file == null || file.isEmpty())) {
+            throw new RuntimeException("Post cannot be empty");
+        }
+
         newPost.setContent(content);
+
         if (file != null && !file.isEmpty()) {
             // Validate file type
             String contentType = file.getContentType();
@@ -112,16 +127,19 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
-        return postRepository.save(newPost);
+        return convertToDTO(postRepository.save(newPost));
     }
 
     @Override
-    public Post updatePost(String content, MultipartFile file ,Integer postId) {
+    public PostResponse updatePost(String content, MultipartFile file ,Integer postId) {
         Integer userId = getCurrentUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to update this post");
+            throw new UserForbiddenException("You are not allowed to update this post");
+        }
+        if ((content == null || content.isEmpty()) && (file == null || file.isEmpty())) {
+            throw new RuntimeException("Post cannot be empty");
         }
         post.setContent(content);
         if (file != null && !file.isEmpty()) {
@@ -140,8 +158,10 @@ public class PostServiceImpl implements PostService {
                 throw new RuntimeException("Failed to store file", e);
             }
         }
+        post.setIsEdited(true);
         post.setUpdatedAt(LocalDateTime.now());
-        return postRepository.save(post);
+
+        return convertToDTO(postRepository.save(post));
     }
 
 
@@ -151,8 +171,55 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to delete this post");
+            throw new UserForbiddenException("You are not allowed to delete this post");
         }
         postRepository.delete(post);
+    }
+
+    @Override
+    public List<PostResponse> findAll(Integer page, Integer size) {
+        User user = userRepository.findById(UserContext.getUser().getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new UserForbiddenException("You are not allowed to see all posts");
+        }
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> pagePosts = postRepository.findAll(pageable);
+        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public void deletePosts(DeleteRequest request){
+        User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new UserForbiddenException("User is not authorized to delete posts");
+        }
+
+        List<Integer> ids = request.getIds();
+        List<Post> postsToDelete = postRepository.findAllById(ids);
+
+        List<Integer> existingIds = postsToDelete.stream()
+                .map(Post::getId)
+                .toList();
+
+        List<Integer> notFoundIds = ids.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+
+        if (!notFoundIds.isEmpty()) {
+            throw new EntityNotFoundException("Posts not found for ids: " + notFoundIds);
+        }
+
+        postRepository.deleteAll(postsToDelete);
+    }
+
+    @Override
+    public PostResponse findById(Integer postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found for id: " + postId));
+        return convertToDTO(post);
     }
 }

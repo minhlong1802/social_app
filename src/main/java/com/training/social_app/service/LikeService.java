@@ -1,12 +1,15 @@
 package com.training.social_app.service;
 
-import com.training.social_app.entity.Like;
+import com.training.social_app.dto.response.LikeResponse;
+
+import java.util.List;
 
 public interface LikeService {
-    Like likePost(Integer postId);
+    LikeResponse likePost(Integer postId);
 
-    int countLikesForUserInPastWeek();
+    //Get all likes for a post
+    List<LikeResponse> getLikesForPost(Integer postId, Integer page, Integer size);
 
-    //Remove the like
-    void unlikePost(Integer postId);
+    //Get like by id
+    LikeResponse getLikeById(Integer likeId);
 }

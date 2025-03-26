@@ -1,14 +1,14 @@
 package com.training.social_app.service;
 
 import com.training.social_app.dto.request.CommentRequest;
-import com.training.social_app.entity.Comment;
+import com.training.social_app.dto.response.CommentResponse;
 
 import java.util.List;
 
 public interface CommentService {
-    Comment commentPost(CommentRequest commentRequest);
-    Comment editComment(CommentRequest commentRequest, Integer commentId);
+    CommentResponse commentPost(CommentRequest commentRequest);
+    CommentResponse editComment(CommentRequest commentRequest, Integer commentId);
     void deleteComment(Integer postId);
-    List<Comment> getCommentsByPostId(Integer postId);
-    int countCommentsForUserInPastWeek();
+    List<CommentResponse> getCommentsByPostId(Integer postId, Integer page, Integer size);
+    CommentResponse getCommentById(Integer commentId);
 }

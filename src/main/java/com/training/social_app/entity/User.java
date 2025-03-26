@@ -38,9 +38,6 @@ public class User {
     @Column(name="otp_expiry")
     private LocalDateTime otpExpiry;
 
-    @Column(name="is_verified")
-    private Boolean isVerified = false;
-
     @Column(name="forgot_password_token")
     private String forgotPasswordToken;
 

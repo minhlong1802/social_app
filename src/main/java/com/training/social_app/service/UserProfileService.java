@@ -7,4 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UserProfileService {
     UserProfile getUserProfileByUserId();
     UserProfile saveOrUpdateUserProfile(UserProfileRequest userProfile,MultipartFile file);
+    UserProfile getUserProfileByProfileId(Integer profileId);
+    void deleteUserProfile();
+    UserProfile getUserProfileById(Integer id);
 }
