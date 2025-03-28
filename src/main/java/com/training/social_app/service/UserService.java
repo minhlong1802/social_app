@@ -4,6 +4,7 @@ import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.dto.response.UserResponse;
+import com.training.social_app.dto.response.DetailUserResponse;
 import com.training.social_app.entity.User;
 
 import java.util.List;
@@ -17,9 +18,9 @@ public interface UserService {
     void resetPassword(String token, String newPassword);
     void deleteUser();
     void deleteUsers(DeleteRequest request);
-    List<UserResponse> findAll(String searchText, int page, int size);
-    UserResponse findById(Integer userId);
-    UserResponse getUserProfile();
+    List<DetailUserResponse> findAll(String searchText, int page, int size);
+    DetailUserResponse findById(Integer userId);
+    DetailUserResponse getUserProfile();
     //search user by full name (for normal user)
     List<UserResponse> searchUser(String searchText, int page, int size);
 }

@@ -85,13 +85,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
-        List<User> friends = friendShipRepository.findFriendsByUserId(userId);
+        List<User> friends = friendShipRepository.getFriendsByUserId(userId);
         List<Integer> friendIds = friends.stream().map(User::getId).collect(Collectors.toList());
 
         if (page > 0) {
             page = page - 1;
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
         Page<Post> pagePosts = postRepository.findByUserIdIn(friendIds, pageable);
 
         return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());

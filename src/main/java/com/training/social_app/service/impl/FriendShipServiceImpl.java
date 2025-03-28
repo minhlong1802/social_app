@@ -1,6 +1,8 @@
 package com.training.social_app.service.impl;
 
+import com.training.social_app.dto.response.FriendShipRequestResponse;
 import com.training.social_app.dto.response.FriendShipResponse;
+import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
 import com.training.social_app.enums.RequestStatus;
@@ -11,10 +13,15 @@ import com.training.social_app.utils.UserContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +37,26 @@ public class FriendShipServiceImpl implements FriendShipService {
         return currentUser.getId();
     }
 
+    private UserResponse convertToUserResponse(User user) {
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setFullName(user.getUserProfile().getFullName());
+        userResponse.setAvatarUrl(user.getUserProfile().getAvatarUrl());
+        return userResponse;
+    }
+
     // Get friends of user
     @Override
-    public List<User> getFriends() {
+    public List<UserResponse> getFriends(int page, int size) {
         Integer userId = getCurrentUserId();
-        return friendShipRepository.findFriendsByUserId(userId);
+        if (page > 0) {
+            page = page - 1;
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Page<User> friendsPage = friendShipRepository.findFriendsByUserId(userId, pageable);
+        return friendsPage.getContent().stream()
+                .map(this::convertToUserResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -45,16 +67,42 @@ public class FriendShipServiceImpl implements FriendShipService {
         return convertToDto(friendShip);
     }
 
-    @Override
-    public List<User> getFriendRequests() {
-        Integer userId = getCurrentUserId();
-        return friendShipRepository.findFriendRequestsByUserId(userId);
+    private FriendShipRequestResponse convertToFriendShipRequestResponse(FriendShip friendShip, boolean isRequester) {
+        FriendShipRequestResponse friendShipRequestResponse = new FriendShipRequestResponse();
+        friendShipRequestResponse.setId(friendShip.getId());
+        User user = isRequester ? friendShip.getUser2() : friendShip.getUser1();
+        if (user.getUserProfile() != null) {
+            friendShipRequestResponse.setUserId(user.getId());
+            friendShipRequestResponse.setUserFullName(user.getUserProfile().getFullName());
+            friendShipRequestResponse.setUserAvatarUrl(user.getUserProfile().getAvatarUrl());
+        } else {
+            friendShipRequestResponse.setUserId(user.getId());
+            friendShipRequestResponse.setUserFullName(null);
+            friendShipRequestResponse.setUserAvatarUrl(null);
+        }
+        friendShipRequestResponse.setStatus(friendShip.getStatus());
+        friendShipRequestResponse.setCreatedAt(friendShip.getCreatedAt());
+        return friendShipRequestResponse;
     }
 
     @Override
-    public List<User> getFriendRequestsToUser() {
+    public List<FriendShipRequestResponse> getFriendRequests(int page, int size) {
         Integer userId = getCurrentUserId();
-        return friendShipRepository.findFriendRequestsToUserId(userId);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<FriendShip> friendRequestsPage = friendShipRepository.findFriendRequestsByUserId(userId, pageable);
+        return friendRequestsPage.getContent().stream()
+                .map(friendShip -> convertToFriendShipRequestResponse(friendShip, true))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FriendShipRequestResponse> getFriendRequestsToUser(int page, int size) {
+        Integer userId = getCurrentUserId();
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<FriendShip> friendRequestsToUserPage = friendShipRepository.findFriendRequestsToUserId(userId, pageable);
+        return friendRequestsToUserPage.getContent().stream()
+                .map(friendShip -> convertToFriendShipRequestResponse(friendShip, false))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -62,6 +110,9 @@ public class FriendShipServiceImpl implements FriendShipService {
         Integer requesterId = getCurrentUserId();
         if(friendShipRepository.findByUser1IdAndUser2Id(requesterId,userRepository.findById(requesteeId).orElseThrow(() -> new EntityNotFoundException("User not found for requestee id: " + requesteeId)).getId() ).isPresent()) {
             throw new RuntimeException("Friend request already sent or accepted");
+        }
+        if(Objects.equals(requesterId, requesteeId)) {
+            throw new RuntimeException("User cannot send friend request to themselves");
         }
         FriendShip friendShip = new FriendShip();
         friendShip.setUser1(userRepository.findById(requesterId).orElseThrow(() -> new EntityNotFoundException("User not found for requester id: " + requesterId)));
