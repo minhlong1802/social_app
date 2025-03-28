@@ -8,9 +8,9 @@ public class DateUtils {
     public static boolean isValidDate(String date) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            LocalDate.parse(date, formatter);
-            return true;
-        } catch(DateTimeParseException e){
+            LocalDate parsedDate = LocalDate.parse(date, formatter);
+            return !parsedDate.isAfter(LocalDate.now());
+        } catch (DateTimeParseException e) {
             return false;
         }
     }

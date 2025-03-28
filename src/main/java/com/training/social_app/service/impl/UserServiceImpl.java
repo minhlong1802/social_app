@@ -125,9 +125,6 @@ public class UserServiceImpl implements UserService {
         if (LocalDateTime.now().isAfter(user.getForgotPasswordTokenExpiry())) {
             throw new RuntimeException("Invalid or expired token");
         }
-        if (newPassword.length() < 6) {
-            throw new RuntimeException("Password must be at least 6 characters long");
-        }
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         user.setForgotPasswordToken(null);
         user.setForgotPasswordTokenExpiry(null);
