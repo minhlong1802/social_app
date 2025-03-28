@@ -1,7 +1,9 @@
 package com.training.social_app.controller;
 
 import com.training.social_app.dto.response.APIResponse;
+import com.training.social_app.dto.response.FriendShipRequestResponse;
 import com.training.social_app.dto.response.FriendShipResponse;
+import com.training.social_app.dto.response.UserResponse;
 import com.training.social_app.entity.User;
 import com.training.social_app.service.FriendShipService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,9 +27,10 @@ public class FriendShipController {
     // Get friends of user
     @Operation(summary = "Get friends of user")
     @GetMapping
-    public ResponseEntity<Object> getFriendsOfUser() {
+    public ResponseEntity<Object> getFriendsOfUser(@RequestParam(defaultValue = "1") Integer pageNo,
+                                                   @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<User> friends = friendShipService.getFriends();
+            List<UserResponse> friends = friendShipService.getFriends(pageNo, pageSize);
             return APIResponse.responseBuilder(friends, "Friends retrieved successfully", HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             log.error("Error getFriendsOfUser", e);
@@ -47,11 +50,12 @@ public class FriendShipController {
     }
 
     // Get friend requests of user
-    @Operation(summary = "Get friend requests of user")
+    @Operation(summary = "Get friend requests of user sort by time")
     @GetMapping("/requests")
-    public ResponseEntity<Object> getFriendRequestsOfUser() {
+    public ResponseEntity<Object> getFriendRequestsOfUser(@RequestParam(defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<User> friendRequests = friendShipService.getFriendRequests();
+            List<FriendShipRequestResponse> friendRequests = friendShipService.getFriendRequests(pageNo,pageSize);
             return APIResponse.responseBuilder(friendRequests, "Friend requests retrieved successfully", HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             log.error("Error getFriendRequestsOfUser", e);
@@ -73,9 +77,10 @@ public class FriendShipController {
     // Get friend requests to user
     @Operation(summary = "Get friend requests to user")
     @GetMapping("/requests/to")
-    public ResponseEntity<Object> getFriendRequestsToUser() {
+    public ResponseEntity<Object> getFriendRequestsToUser(@RequestParam(defaultValue = "1") Integer pageNo,
+                                                          @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<User> friendRequestsToUser = friendShipService.getFriendRequestsToUser();
+            List<FriendShipRequestResponse> friendRequestsToUser = friendShipService.getFriendRequestsToUser(pageNo,pageSize);
             return APIResponse.responseBuilder(friendRequestsToUser, "Friend requests to user retrieved successfully", HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             log.error("Error getFriendRequestsToUser", e);

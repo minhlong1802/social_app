@@ -2,6 +2,8 @@ package com.training.social_app.repository;
 
 import com.training.social_app.entity.FriendShip;
 import com.training.social_app.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,15 +22,16 @@ public interface FriendShipRepository extends JpaRepository<FriendShip, Integer>
 
     //Find all friends of a user
     @Query("SELECT f.user2 FROM FriendShip f where f.user1.id = :userId and f.status = 'ACCEPTED'")
-    List<User> findFriendsByUserId(Integer userId);
+    List<User> getFriendsByUserId(Integer userId);
 
-    //Find all friend requests sent by a user
-    @Query("SELECT f.user2 FROM FriendShip f where f.user1.id = :userId and f.status = 'PENDING'")
-    List<User> findFriendRequestsByUserId(Integer userId);
+    @Query("SELECT f.user2 FROM FriendShip f WHERE f.user1.id = :userId AND f.status = 'ACCEPTED'")
+    Page<User> findFriendsByUserId(Integer userId, Pageable pageable);
 
-    //Find all friend requests received by a user
-    @Query("SELECT f.user1 FROM FriendShip f where f.user2.id = :userId and f.status = 'PENDING'")
-    List<User> findFriendRequestsToUserId(Integer userId);
+    @Query("SELECT f FROM FriendShip f WHERE f.user1.id = :userId AND f.status = 'PENDING'")
+    Page<FriendShip> findFriendRequestsByUserId(Integer userId, Pageable pageable);
+
+    @Query("SELECT f FROM FriendShip f WHERE f.user2.id = :userId AND f.status = 'PENDING'")
+    Page<FriendShip> findFriendRequestsToUserId(Integer userId, Pageable pageable);
 
     @Modifying
     @Transactional

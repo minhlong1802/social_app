@@ -4,6 +4,7 @@ import com.training.social_app.dto.request.DeleteRequest;
 import com.training.social_app.dto.request.LoginRequest;
 import com.training.social_app.dto.request.UserRequest;
 import com.training.social_app.dto.response.UserResponse;
+import com.training.social_app.dto.response.DetailUserResponse;
 import com.training.social_app.entity.User;
 import com.training.social_app.entity.UserProfile;
 import com.training.social_app.enums.Role;
@@ -13,8 +14,6 @@ import com.training.social_app.repository.UserRepository;
 import com.training.social_app.service.UserService;
 import com.training.social_app.utils.UserContext;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +166,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> findAll(String searchText, int page, int size) {
+    public List<DetailUserResponse> findAll(String searchText, int page, int size) {
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
             throw new UserForbiddenException("User is not allowed to see all users");
@@ -190,8 +189,8 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toList());
     }
 
-    private UserResponse convertToDTO(User user) {
-        UserResponse userDTO = new UserResponse();
+    private DetailUserResponse convertToDTO(User user) {
+        DetailUserResponse userDTO = new DetailUserResponse();
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
         userDTO.setEmail(user.getEmail());
@@ -206,14 +205,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse findById(Integer userId) {
+    public DetailUserResponse findById(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userId));
         return convertToDTO(user);
     }
 
     @Override
-    public UserResponse getUserProfile() {
+    public DetailUserResponse getUserProfile() {
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         return convertToDTO(user);
     }
@@ -229,7 +228,15 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(page, size);
         Page<User> usersPage = userRepository.findByUserProfileFullNameContaining(searchText, pageable);
         return usersPage.getContent().stream()
-                .map(this::convertToDTO)
+                .map(this::convertToSearchUserResponse)
                 .collect(Collectors.toList());
+    }
+
+    private UserResponse convertToSearchUserResponse (User user) {
+        UserResponse userDTO = new UserResponse();
+        userDTO.setId(user.getId());
+        userDTO.setFullName(user.getUserProfile().getFullName());
+        userDTO.setAvatarUrl(user.getUserProfile().getAvatarUrl());
+        return userDTO;
     }
 }
