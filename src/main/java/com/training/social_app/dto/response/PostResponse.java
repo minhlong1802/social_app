@@ -10,6 +10,8 @@ public class PostResponse {
     private String content;
     private String imageUrl;
     private Integer userId;
+    private String userFullName;
+    private String userProfileImage;
     private boolean isEdited;
     private int likeCount;
     private int commentCount;

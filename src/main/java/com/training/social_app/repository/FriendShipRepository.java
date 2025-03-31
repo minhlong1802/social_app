@@ -18,14 +18,36 @@ import java.util.Optional;
 @Repository
 public interface FriendShipRepository extends JpaRepository<FriendShip, Integer>, JpaSpecificationExecutor<FriendShip> {
     //Find a friendship by user who sent the request and the user who received the request
-    Optional<FriendShip> findByUser1IdAndUser2Id(Integer requesterId, Integer requesteeId);
+    Optional<FriendShip> findByUser1IdAndUser2Id(Integer requesterId, Integer user2Id);
 
     //Find all friends of a user
-    @Query("SELECT f.user2 FROM FriendShip f where f.user1.id = :userId and f.status = 'ACCEPTED'")
-    List<User> getFriendsByUserId(Integer userId);
+    @Query("""
+    SELECT u FROM User u\s
+    WHERE u.id IN (
+        SELECT CASE\s
+            WHEN f.user1.id = :userId THEN f.user2.id
+            ELSE f.user1.id\s
+        END\s
+        FROM FriendShip f
+        WHERE (f.user1.id = :userId OR f.user2.id = :userId)\s
+        AND f.status = 'ACCEPTED'
+    )
+""")    List<User> getFriendsByUserId(Integer userId);
 
-    @Query("SELECT f.user2 FROM FriendShip f WHERE f.user1.id = :userId AND f.status = 'ACCEPTED'")
+    @Query("""
+    SELECT u FROM User u\s
+    WHERE u.id IN (
+        SELECT CASE\s
+            WHEN f.user1.id = :userId THEN f.user2.id
+            ELSE f.user1.id\s
+        END\s
+        FROM FriendShip f
+        WHERE (f.user1.id = :userId OR f.user2.id = :userId)\s
+        AND f.status = 'ACCEPTED'
+    )
+""")
     Page<User> findFriendsByUserId(Integer userId, Pageable pageable);
+
 
     @Query("SELECT f FROM FriendShip f WHERE f.user1.id = :userId AND f.status = 'PENDING'")
     Page<FriendShip> findFriendRequestsByUserId(Integer userId, Pageable pageable);

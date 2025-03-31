@@ -48,6 +48,8 @@ public class LikeServiceImpl implements LikeService {
         likeResponse.setId(like.getId());
         likeResponse.setPostId(like.getPost().getId());
         likeResponse.setUserId(like.getUser().getId());
+        likeResponse.setUserFullName(like.getUser().getUserProfile().getFullName());
+        likeResponse.setUserProfileImage(like.getUser().getUserProfile().getAvatarUrl());
         likeResponse.setCreatedAt(like.getCreatedAt());
         return likeResponse;
     }

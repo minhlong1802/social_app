@@ -176,7 +176,7 @@ public class CommentController {
     // Get comments by post id
     @Operation(summary = "Get comments by post id")
     @GetMapping("/post")
-    public ResponseEntity<Object> getCommentsByPostId(@RequestParam String postId, @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "10") Integer pageSize) {
+    public ResponseEntity<Object> getCommentsByPostId(@RequestParam String postId, @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
             int id = Integer.parseInt(postId);
             if(id <= 0) {

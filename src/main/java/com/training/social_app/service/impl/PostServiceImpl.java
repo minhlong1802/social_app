@@ -63,7 +63,9 @@ public class PostServiceImpl implements PostService {
         postDTO.setContent(post.getContent());
         postDTO.setImageUrl(post.getImageUrl());
         postDTO.setUserId(post.getUser().getId());
-        postDTO.setEdited(true);
+        postDTO.setUserFullName(post.getUser().getUserProfile().getFullName());
+        postDTO.setUserProfileImage(post.getUser().getUserProfile().getAvatarUrl());
+        postDTO.setEdited(post.getIsEdited());
         postDTO.setLikeCount(likeRepository.countLikesByPostId(post.getId()));
         postDTO.setCommentCount(commentRepository.countCommentsByPostId(post.getId()));
         postDTO.setCreatedAt(post.getCreatedAt());

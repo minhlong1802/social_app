@@ -254,7 +254,7 @@ public class PostController {
         }
     }
 
-    //Get post by Id
+    //Get post by id
     @Operation(summary = "Get post by Id")
     @GetMapping("/{postId}")
     public ResponseEntity<Object> getPostById(@PathVariable String postId) {

@@ -9,5 +9,7 @@ public class LikeResponse {
     private Integer id;
     private Integer postId;
     private Integer userId;
+    private String userFullName;
+    private String userProfileImage;
     private LocalDateTime createdAt;
 }

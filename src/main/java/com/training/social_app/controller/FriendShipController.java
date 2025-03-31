@@ -25,7 +25,7 @@ public class FriendShipController {
     private final FriendShipService friendShipService;
 
     // Get friends of user
-    @Operation(summary = "Get friends of user")
+    @Operation(summary = "Get friends of user sort by time")
     @GetMapping
     public ResponseEntity<Object> getFriendsOfUser(@RequestParam(defaultValue = "1") Integer pageNo,
                                                    @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -50,7 +50,7 @@ public class FriendShipController {
     }
 
     // Get friend requests of user
-    @Operation(summary = "Get friend requests of user sort by time")
+    @Operation(summary = "Get friend requests of user")
     @GetMapping("/requests")
     public ResponseEntity<Object> getFriendRequestsOfUser(@RequestParam(defaultValue = "1") Integer pageNo,
                                                           @RequestParam(defaultValue = "10") Integer pageSize) {
