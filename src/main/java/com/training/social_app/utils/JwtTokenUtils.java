@@ -1,7 +1,5 @@
 package com.training.social_app.utils;
 
-import com.training.social_app.dto.response.UserDto;
-import com.training.social_app.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtils implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -2550185165626007488L;
 
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
@@ -51,11 +51,6 @@ public class JwtTokenUtils implements Serializable {
         return expiration.before(new Date());
     }
 
-    // generate token for user
-//    public String generateToken(UserDetails userDetails) {
-//        Map<String, Object> claims = new HashMap<>();
-//        return doGenerateToken(claims, userDetails.getUsername());
-//    }
     public String generateToken(UserDetails userDetails) {
 //        UserDetails userDetails = new UserDto();
         Map<String, Object> claims = new HashMap<>();

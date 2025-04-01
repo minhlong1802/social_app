@@ -9,7 +9,6 @@ import com.training.social_app.service.UserService;
 import com.training.social_app.service.impl.UserDetailsServiceImpl;
 import com.training.social_app.service.impl.UserServiceImpl;
 import com.training.social_app.utils.JwtTokenUtils;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

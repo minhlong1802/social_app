@@ -20,7 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentResponse> getCommentsByPostId(Integer postId, Integer page, Integer size) {
+    public Map<String, Object> getCommentsByPostId(Integer postId, Integer page, Integer size) {
         if (postRepository.findById(postId).isEmpty()) {
             throw new EntityNotFoundException("Post not found for id: " + postId);
         }
@@ -91,7 +92,12 @@ public class CommentServiceImpl implements CommentService {
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<Comment> pageComments = commentRepository.findAllByPostId(postId, pageable);
-        return pageComments.getContent().stream().map(this::convertToDto).collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("listComment", pageComments.getContent().stream().map(this::convertToDto).collect(Collectors.toList()));
+        response.put("pageSize", pageComments.getSize());
+        response.put("pageNo", pageComments.getNumber() + 1);
+        response.put("totalPage", pageComments.getTotalPages());
+        return response;
     }
 
     @Override

@@ -15,7 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -97,7 +96,7 @@ public class ReportServiceImpl implements ReportService {
 
             // Write headers with style
             Row headerRow = sheet.createRow(0);
-            List<String> headers = excelData.get(0);
+            List<String> headers = excelData.getFirst();
             for (int i = 0; i < headers.size(); i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers.get(i));

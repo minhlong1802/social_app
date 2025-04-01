@@ -1,16 +1,14 @@
 package com.training.social_app.dto.request;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Setter
+@Getter
 public class DeleteRequest {
+    // Getter and Setter
     private List<Integer> ids;
 
-    // Getter and Setter
-    public List<Integer> getIds() {
-        return ids;
-    }
-
-    public void setIds(List<Integer> ids) {
-        this.ids = ids;
-    }
 }

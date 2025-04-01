@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<DetailUserResponse> findAll(String searchText, int page, int size) {
+    public Map<String,Object> findAll(String searchText, int page, int size) {
         User user = userRepository.findById(UserContext.getUser().getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
             throw new UserForbiddenException("User is not allowed to see all users");
@@ -181,9 +181,12 @@ public class UserServiceImpl implements UserService {
             };
 
             Page<User> pageUser = userRepository.findAll(specification, pageable);
-            return pageUser.getContent().stream()
-                    .map(this::convertToDTO)
-                    .collect(Collectors.toList());
+            Map<String,Object> response = new HashMap<>();
+            response.put("listUser", pageUser.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+            response.put("pageSize", pageUser.getSize());
+            response.put("pageNo", pageUser.getNumber() + 1);
+            response.put("totalPage", pageUser.getTotalPages());
+            return response;
     }
 
     private DetailUserResponse convertToDTO(User user) {
@@ -215,7 +218,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> searchUser(String searchText, int page, int size) {
+    public Map<String,Object> searchUser(String searchText, int page, int size) {
         if (searchText == null || searchText.isEmpty()) {
             throw new RuntimeException("Search text is required");
         }
@@ -224,9 +227,12 @@ public class UserServiceImpl implements UserService {
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<User> usersPage = userRepository.findByUserProfileFullNameContaining(searchText, pageable);
-        return usersPage.getContent().stream()
-                .map(this::convertToSearchUserResponse)
-                .collect(Collectors.toList());
+        Map<String,Object> response = new HashMap<>();
+        response.put("listUser", usersPage.getContent().stream().map(this::convertToSearchUserResponse).collect(Collectors.toList()));
+        response.put("pageSize", usersPage.getSize());
+        response.put("pageNo", usersPage.getNumber() + 1);
+        response.put("totalPage", usersPage.getTotalPages());
+        return response;
     }
 
     private UserResponse convertToSearchUserResponse (User user) {

@@ -18,10 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -76,7 +74,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public List<LikeResponse> getLikesForPost(Integer postId, Integer page, Integer size) {
+    public Map<String, Object> getLikesForPost(Integer postId, Integer page, Integer size) {
         Optional<Post> post = postRepository.findById(postId);
         if(post.isEmpty()) {
             throw new EntityNotFoundException("Post not found for id: " + postId);
@@ -87,7 +85,12 @@ public class LikeServiceImpl implements LikeService {
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<Like> pageLikes = likeRepository.findByPostId(postId, pageable);
-            return pageLikes.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+            Map<String, Object> mapLike = new HashMap<>();
+            mapLike.put("listLike", pageLikes.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+            mapLike.put("pageSize", pageLikes.getSize());
+            mapLike.put("pageNo", pageLikes.getNumber()+1);
+            mapLike.put("totalPage", pageLikes.getTotalPages());
+            return mapLike;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

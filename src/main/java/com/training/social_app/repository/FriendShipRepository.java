@@ -60,11 +60,6 @@ public interface FriendShipRepository extends JpaRepository<FriendShip, Integer>
     @Query("UPDATE FriendShip f SET f.status = 'ACCEPTED' WHERE f.user2.id = :userId AND f.id = :requestId AND f.status = 'PENDING'")
     void acceptFriendRequest(Integer userId, Integer requestId);
 
-    //Reject a friend request to current user by id and status
-    @Modifying
-    @Transactional
-    @Query("UPDATE FriendShip f SET f.status = 'REJECTED' where f.user2.id = :userId and f.id = :requestId and f.status = 'PENDING'")
-    void rejectFriendRequest(Integer userId, Integer requestId);
 
     //Count new friends of a user in the past week
     @Query("SELECT COUNT(f) FROM FriendShip f where f.user2.id = :userId and f.status = 'ACCEPTED' and f.createdAt between :startDate and :endDate")

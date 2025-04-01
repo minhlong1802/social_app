@@ -13,11 +13,9 @@ public class OpenApiConfig {
     /**
      * This method is needed to allow sending multipart requests. For example, when an item is
      * created together with an image. If this is not set the request will return an exception with:
-     *
      * Resolved [org.springframework.web.HttpMediaTypeNotSupportedException: Content-Type
      * 'application/octet-stream' is not supported]
-     *
-     * @param converter
+//     *@param converter
      */
     public OpenApiConfig(@Qualifier("mappingJackson2HttpMessageConverter") MappingJackson2HttpMessageConverter converter) {
         var supportedMediaTypes = new ArrayList<>(converter.getSupportedMediaTypes());

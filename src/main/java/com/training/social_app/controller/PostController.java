@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -31,7 +31,7 @@ public class PostController {
     public ResponseEntity<Object> getPostsOfFriendsSortedByDate(@RequestParam(defaultValue = "1") Integer pageNo,
                                                                 @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<PostResponse> posts = postService.getPostsOfFriendsSortedByDate(pageNo, pageSize);
+            Map<String,Object> posts = postService.getPostsOfFriendsSortedByDate(pageNo, pageSize);
             return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("Error getPostsOfFriendsSortedByDate", e);
@@ -56,7 +56,7 @@ public class PostController {
     public ResponseEntity<Object> getPostsByUserId(@RequestParam(defaultValue = "1") Integer pageNo,
                                                    @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            List<PostResponse> posts = postService.getPostsByUserId(pageNo, pageSize);
+            Map<String,Object> posts = postService.getPostsByUserId(pageNo, pageSize);
             return APIResponse.responseBuilder(posts, "Posts retrieved successfully", HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error getPostsByUserId", e);
@@ -172,7 +172,7 @@ public class PostController {
             return APIResponse.responseBuilder(
                     null,
                     Objects.requireNonNull(e.getMessage()),
-                    HttpStatus.BAD_REQUEST
+                    HttpStatus.FORBIDDEN
             );
         } catch (Exception e) {
             log.error("Error deletePost", e);

@@ -27,7 +27,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,18 +76,23 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> getPostsByUserId(Integer page, Integer size) {
+    public Map<String, Object> getPostsByUserId(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
         if (page > 0) {
             page = page - 1;
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage = postRepository.findAllByUserId(userId, pageable);
-        return postPage.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("listPost", postPage.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        response.put("pageSize", postPage.getSize());
+        response.put("pageNo", postPage.getNumber() + 1);
+        response.put("totalPage", postPage.getTotalPages());
+        return response;
     }
 
     @Override
-    public List<PostResponse> getPostsOfFriendsSortedByDate(Integer page, Integer size) {
+    public Map<String, Object> getPostsOfFriendsSortedByDate(Integer page, Integer size) {
         Integer userId = getCurrentUserId();
         List<User> friends = friendShipRepository.getFriendsByUserId(userId);
         List<Integer> friendIds = friends.stream().map(User::getId).collect(Collectors.toList());
@@ -95,8 +102,12 @@ public class PostServiceImpl implements PostService {
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
         Page<Post> pagePosts = postRepository.findByUserIdIn(friendIds, pageable);
-
-        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("listPost", pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        response.put("pageSize", pagePosts.getSize());
+        response.put("pageNo", pagePosts.getNumber() + 1);
+        response.put("totalPage", pagePosts.getTotalPages());
+        return response;
     }
 
     @Override
@@ -179,7 +190,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> findAll(Integer page, Integer size) {
+    public Map<String, Object> findAll(Integer page, Integer size) {
         User user = userRepository.findById(UserContext.getUser().getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getRole().equals(Role.ADMIN)) {
@@ -190,7 +201,12 @@ public class PostServiceImpl implements PostService {
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> pagePosts = postRepository.findAll(pageable);
-        return pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("listPost", pagePosts.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        response.put("pageSize", pagePosts.getSize());
+        response.put("pageNo", pagePosts.getNumber() + 1);
+        response.put("totalPage", pagePosts.getTotalPages());
+        return response;
     }
 
     @Override
