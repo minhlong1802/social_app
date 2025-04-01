@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -216,15 +217,16 @@ public class LikeServiceImplTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(likeRepository.findByPostId(eq(postId), any(Pageable.class))).thenReturn(likePage);
 
-        List<LikeResponse> responses = likeService.getLikesForPost(postId, page, size);
+        Map<String, Object> responses = likeService.getLikesForPost(postId, page, size);
 
         // Assertions
         assertNotNull(responses);
-        assertEquals(1, responses.size());
-        assertEquals(postId, responses.getFirst().getPostId());
-        assertEquals(userId, responses.getFirst().getUserId());
-        assertEquals("John Doe", responses.getFirst().getUserFullName());
-        assertEquals("avatar.jpg", responses.getFirst().getUserProfileImage());
+        List<LikeResponse> likeResponses = (List<LikeResponse>) responses.get("listLike");
+        assertEquals(1, likeResponses.size());
+        assertEquals(postId, likeResponses.getFirst().getPostId());
+        assertEquals(userId, likeResponses.getFirst().getUserId());
+        assertEquals("John Doe", likeResponses.getFirst().getUserFullName());
+        assertEquals("avatar.jpg", likeResponses.getFirst().getUserProfileImage());
 
         verify(postRepository).findById(postId);
         verify(likeRepository).findByPostId(eq(postId), any(Pageable.class));
@@ -257,10 +259,11 @@ public class LikeServiceImplTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(likeRepository.findByPostId(eq(postId), any(Pageable.class))).thenReturn(likePage);
 
-        List<LikeResponse> responses = likeService.getLikesForPost(postId, page, size);
+        Map<String, Object> responses = likeService.getLikesForPost(postId, page, size);
 
         assertNotNull(responses);
-        assertEquals(1, responses.size());
+        List<LikeResponse> likeResponses = (List<LikeResponse>) responses.get("listLike");
+        assertEquals(1, likeResponses.size());
 
         verify(postRepository).findById(postId);
         verify(likeRepository).findByPostId(eq(postId), any(Pageable.class));
@@ -276,7 +279,7 @@ public class LikeServiceImplTest {
         when(likeRepository.findByPostId(eq(postId), any(Pageable.class)))
                 .thenThrow(new RuntimeException("Database error"));  // Force exception
 
-        List<LikeResponse> responses = likeService.getLikesForPost(postId, page, size);
+        Map<String, Object> responses = likeService.getLikesForPost(postId, page, size);
 
         assertNull(responses);  // Expect null due to exception handling
 

@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -247,14 +248,15 @@ public class CommentServiceImplTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(commentRepository.findAllByPostId(eq(postId), any(Pageable.class))).thenReturn(commentPage);
 
-        List<CommentResponse> responses = commentService.getCommentsByPostId(postId, page, size);
+        Map<String, Object> responses = commentService.getCommentsByPostId(postId, page, size);
 
         assertNotNull(responses);
-        assertEquals(1, responses.size());
-        assertEquals(1, responses.getFirst().getId());
-        assertEquals(1, responses.getFirst().getUserId());
-        assertEquals("John Doe", responses.getFirst().getUserFullName());
-        assertEquals("avatar.jpg", responses.getFirst().getUserProfileImage());
+        List<CommentResponse> commentResponses = (List<CommentResponse>) responses.get("listComment");
+        assertEquals(1, commentResponses.size());
+        assertEquals(1, commentResponses.getFirst().getId());
+        assertEquals(1, commentResponses.getFirst().getUserId());
+        assertEquals("John Doe", commentResponses.getFirst().getUserFullName());
+        assertEquals("avatar.jpg", commentResponses.getFirst().getUserProfileImage());
 
         verify(postRepository).findById(postId);
         verify(commentRepository).findAllByPostId(eq(postId), any(Pageable.class));
@@ -287,14 +289,15 @@ public class CommentServiceImplTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(commentRepository.findAllByPostId(eq(postId), any(Pageable.class))).thenReturn(commentPage);
 
-        List<CommentResponse> responses = commentService.getCommentsByPostId(postId, page, size);
+        Map<String, Object> responses = commentService.getCommentsByPostId(postId, page, size);
 
         assertNotNull(responses);
-        assertEquals(1, responses.size());
-        assertEquals(1, responses.getFirst().getId());
-        assertEquals(2, responses.getFirst().getUserId());
-        assertEquals("John Doe", responses.getFirst().getUserFullName());
-        assertEquals("avatar.jpg", responses.getFirst().getUserProfileImage());
+        List<CommentResponse> commentResponses = (List<CommentResponse>) responses.get("listComment");
+        assertEquals(1, commentResponses.size());
+        assertEquals(1, commentResponses.getFirst().getId());
+        assertEquals(2, commentResponses.getFirst().getUserId());
+        assertEquals("John Doe", commentResponses.getFirst().getUserFullName());
+        assertEquals("avatar.jpg", commentResponses.getFirst().getUserProfileImage());
 
         verify(postRepository).findById(postId);
         verify(commentRepository).findAllByPostId(eq(postId), any(Pageable.class));

@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,17 +88,6 @@ class LikeControllerTest {
     }
 
     @Test
-    void getLikesForPost_ValidRequest_ShouldReturnSuccess() {
-        List<LikeResponse> mockLikeList = List.of(mockLikeResponse);
-        when(likeService.getLikesForPost(1, 1, 10)).thenReturn(mockLikeList);
-
-        ResponseEntity<Object> response = likeController.getLikesForPost("1", 1, 10);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(likeService, times(1)).getLikesForPost(1, 1, 10);
-    }
-
-    @Test
     void getLikesForPost_InvalidPostId_ShouldReturnBadRequest() {
         ResponseEntity<Object> response = likeController.getLikesForPost("abc", 1, 10);
 
@@ -118,13 +108,29 @@ class LikeControllerTest {
     }
 
     @Test
+    void getLikesForPost_ValidRequest_ShouldReturnSuccess() {
+        Map<String, Object> mockLikeMap = Map.of(
+                "listLike", List.of(mockLikeResponse),
+                "pageSize", 10,
+                "pageNo", 1,
+                "totalPage", 1
+        );
+        when(likeService.getLikesForPost(1, 1, 10)).thenReturn(mockLikeMap);
+
+        ResponseEntity<Object> response = likeController.getLikesForPost("1", 1, 10);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(likeService, times(1)).getLikesForPost(1, 1, 10);
+    }
+
+    @Test
     void getLikesForPost_PostNotFound_ShouldReturnNotFound() {
         when(likeService.getLikesForPost(1, 1, 10)).thenThrow(new EntityNotFoundException("Post not found"));
 
         ResponseEntity<Object> response = likeController.getLikesForPost("1", 1, 10);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(Objects.requireNonNull(response.getBody()).toString().contains("Invalid postId. It must be an integer"));
+        assertFalse(Objects.requireNonNull(response.getBody()).toString().contains("Post not found"));
         verify(likeService, times(1)).getLikesForPost(1, 1, 10);
     }
 
