@@ -111,6 +111,9 @@ public class FriendShipServiceImpl implements FriendShipService {
         if(friendShipRepository.findByUser1IdAndUser2Id(requesterId,userRepository.findById(requesteeId).orElseThrow(() -> new EntityNotFoundException("User not found for requestee id: " + requesteeId)).getId() ).isPresent()) {
             throw new RuntimeException("Friend request already sent or accepted");
         }
+        if(friendShipRepository.findByUser1IdAndUser2Id(requesteeId,requesterId).isPresent()) {
+            throw new RuntimeException("Friend request already sent or accepted");
+        }
         if(Objects.equals(requesterId, requesteeId)) {
             throw new RuntimeException("User cannot send friend request to themselves");
         }
