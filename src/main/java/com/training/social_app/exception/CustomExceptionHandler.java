@@ -1,6 +1,7 @@
 package com.training.social_app.exception;
 
 import com.training.social_app.dto.response.APIResponse;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -34,6 +35,25 @@ public class CustomExceptionHandler {
                 null,
                 "Unsupported media type",
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE
+        );
+    }
+
+    @ExceptionHandler(DataAccessResourceFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleDataAccessResourceFailureException(DataAccessResourceFailureException ex) {
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("data", null);
+        responseBody.put("message", "Database service is unavailable");
+        responseBody.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+
+        return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGeneralException(Exception ex) {
+        return APIResponse.responseBuilder(
+                null,
+                "An error occurred: " + ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 }
